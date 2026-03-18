@@ -1,97 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
 <meta charset="UTF-8">
+<title>Matches</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
-body{
+*{
 margin:0;
-width:900px;
-height:900px;
-font-family:'Inter', sans-serif;
-position:relative;
+padding:0;
+box-sizing:border-box;
+}
 
-background:
-radial-gradient(circle at 20% 0%, rgba(168,85,247,0.35), transparent 40%),
-radial-gradient(circle at 80% 20%, rgba(139,92,246,0.25), transparent 50%),
-linear-gradient(160deg,#050508,#0b0515,#050508);
-
+body{
+width:1000px;
+height:1000px;
+font-family:Montserrat,sans-serif;
+background:radial-gradient(circle at top,#2a0f4a,#0b0616 70%);
 color:white;
+overflow:hidden;
+position:relative;
 }
 
 /* HEADER */
 .header{
 position:absolute;
-top:40px;
-left:0;
-width:100%;
+top:80px;
+left:50%;
+transform:translateX(-50%);
+text-align:center;
+width:760px;
+}
+
+.title{
+font-weight:900;
+color:#c084fc;
+text-shadow:0 0 25px rgba(168,85,247,0.8);
+line-height:1;
+white-space:nowrap;
+overflow:hidden;
+}
+
+/* авто розмір */
+.title.small{ font-size:42px; }
+.title.medium{ font-size:52px; }
+.title.big{ font-size:64px; }
+
+.subtitle{
+margin-top:10px;
+font-size:14px;
+opacity:0.7;
+letter-spacing:2px;
+}
+
+/* 🔥 ЦЕНТР БЛОК */
+.matchesArea{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
 display:flex;
 flex-direction:column;
 align-items:center;
 }
 
-.title{
-max-width:760px;
-width:100%;
-padding:0 20px;
-
+/* 🔥 ТУРНІР (ПЕРЕНЕСЕНИЙ) */
+.tournament{
+width:760px;
+margin-bottom:24px;
+font-size:28px; /* трохи більший */
 font-weight:900;
 color:#c084fc;
-letter-spacing:3px;
-
 text-align:center;
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
-
-text-shadow:0 0 20px rgba(168,85,247,0.5);
+text-shadow:0 0 12px rgba(168,85,247,0.6);
 }
 
-.subtitle{
-font-size:14px;
-letter-spacing:2px;
-margin-top:6px;
-color:rgba(255,255,255,0.7);
-}
-
-/* 🔥 НОВИЙ БЛОК */
-.tournament{
-margin-top:10px;
-font-size:20px;
-font-weight:800;
-color:#a855f7;
-text-align:center;
-
-text-shadow:0 0 10px rgba(168,85,247,0.6);
-}
-
-/* CENTER */
-.matchesArea{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%, -50%);
-}
-
+/* GRID */
 .gridWrap{
-width:760px;
-}
-
-.matches{
 display:grid;
+grid-template-columns:repeat(2,1fr);
 gap:20px;
-}
-
-.matches.one{
-grid-template-columns: 1fr;
-}
-
-.matches.two{
-grid-template-columns: 1fr 1fr;
-column-gap:24px;
-row-gap:20px;
+width:760px;
 }
 
 /* MATCH */
@@ -99,24 +89,20 @@ row-gap:20px;
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:16px 18px;
-
+padding:18px 22px;
+border-radius:20px;
 background:rgba(168,85,247,0.08);
-border:1px solid rgba(168,85,247,0.35);
-
-border-radius:14px;
-
+border:1px solid rgba(168,85,247,0.3);
 box-shadow:
-0 0 20px rgba(168,85,247,0.25),
-inset 0 0 20px rgba(168,85,247,0.12);
+0 0 20px rgba(168,85,247,0.4),
+inset 0 0 20px rgba(168,85,247,0.15);
 }
 
-/* TEAM */
+/* TEAMS */
 .team{
 display:flex;
 align-items:center;
-gap:10px;
-flex:1;
+gap:12px;
 min-width:0;
 }
 
@@ -125,43 +111,34 @@ justify-content:flex-end;
 }
 
 /* LOGO */
-.logoBox{
+.logo{
 width:42px;
 height:42px;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-background:rgba(255,255,255,0.05);
-border-radius:10px;
-
-box-shadow:0 0 10px rgba(168,85,247,0.5);
-
-flex-shrink:0;
-}
-
-.logoBox img{
-max-width:28px;
-max-height:28px;
+border-radius:12px;
+background:#1a1a1a;
+object-fit:contain;
+padding:6px;
 }
 
 /* NAME */
 .name{
+font-weight:700;
 font-size:18px;
-font-weight:800;
-
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
-
-max-width:140px;
+max-width:120px;
 }
 
 /* CENTER */
 .center{
 text-align:center;
-flex:0 0 80px;
+min-width:80px;
+}
+
+.score{
+font-size:22px;
+font-weight:900;
 }
 
 .time{
@@ -170,7 +147,7 @@ font-weight:900;
 }
 
 .bo{
-font-size:11px;
+font-size:12px;
 opacity:0.7;
 margin-top:2px;
 }
@@ -182,38 +159,94 @@ bottom:20px;
 left:50%;
 transform:translateX(-50%);
 font-size:14px;
+opacity:0.15;
 letter-spacing:2px;
-color:rgba(255,255,255,0.25);
 }
 </style>
-
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <div class="title" style="font-size: {{TITLE_SIZE}}">
-    {{TITLE}}
-  </div>
+  <div class="title" id="title">{{TITLE}}</div>
+  <div class="subtitle">СМУГАСТИЙ | ZBR4 🇺🇦</div>
+</div>
 
-  <div class="subtitle">СМУГАСТИЙ | ZBR4</div>
+<!-- CENTER -->
+<div class="matchesArea">
 
+  <!-- 🔥 ТУРНІР ТУТ -->
   <div class="tournament">
     {{TOURNAMENT}}
   </div>
-</div>
 
-<div class="matchesArea">
-  <div class="gridWrap">
-    <div class="matches {{GRID_CLASS}}">
-      {{MATCHES}}
-    </div>
-  </div>
+  <div class="gridWrap" id="matches"></div>
+
 </div>
 
 <div class="watermark">
-t.me/zbr4_cast
-</div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-telegram" viewBox="0 0 16 16">
+  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.287 5.906q-1.168.486-4.667 2.01c-.502.214-.684.34-.707.447-.024.113.09.23.364.318l1.45.474.317 1.341a.8.8 0 0 0 .575.575l.136.036a.7.7 0 0 0 .343-.016l.169-.047 1.157-1.157 2.87 2.164c.264.198.482.193.655-.008l3.125-3.57c.175-.205.215-.38.136-.525l-.047-.087-3.518-6.32a.7.7 0 0 0-.343-.343l-.087-.047c-.145-.079-.32-.039-.525.136z"/>
+</svg>
+
+  t.me/zbr4_cast</div>
+
+<script>
+
+/* 🔥 АДАПТИВНИЙ ЗАГОЛОВОК */
+const titleEl = document.getElementById("title");
+const len = titleEl.innerText.length;
+
+if(len < 15) titleEl.classList.add("big");
+else if(len < 25) titleEl.classList.add("medium");
+else titleEl.classList.add("small");
+
+/* LOGOS */
+const logos = {
+  navi:"logos/navi.png",
+  faze:"logos/faze.png",
+  g2:"logos/g2.png",
+  vitality:"logos/vitality.png",
+  mouz:"logos/mouz.png",
+  m80:"logos/m80.png"
+};
+
+function getLogo(team){
+  return logos[team.toLowerCase()] || "logos/default.png";
+}
+
+/* DATA (бот підставляє) */
+const matchesData = {{MATCHES}};
+
+const container = document.getElementById("matches");
+
+matchesData.forEach(m=>{
+  container.innerHTML += `
+  <div class="match">
+    
+    <div class="team">
+      <img class="logo" src="${getLogo(m.t1)}">
+      <div class="name">${m.t1.toUpperCase()}</div>
+    </div>
+
+    <div class="center">
+      ${m.score 
+        ? `<div class="score">${m.score}</div>` 
+        : `<div class="time">${m.time}</div><div class="bo">${m.bo}</div>`
+      }
+    </div>
+
+    <div class="team right">
+      <div class="name">${m.t2.toUpperCase()}</div>
+      <img class="logo" src="${getLogo(m.t2)}">
+    </div>
+
+  </div>
+  `;
+});
+
+</script>
 
 </body>
 </html>
