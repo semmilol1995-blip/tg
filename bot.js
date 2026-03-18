@@ -25,18 +25,22 @@ function getTitleSize(text){
   return 72;
 }
 
-function parseLines(text){
-  const lines = text.split("\n").slice(1);
+/* 🔥 НОВИЙ ПАРСЕР З ТУРНІРОМ */
+function parseInput(text){
+  const lines = text.split("\n").slice(1).map(l => l.trim()).filter(Boolean);
 
-  return lines.map(line=>{
-    line = line.trim();
+  const tournament = lines[0] || "";
+
+  const matches = lines.slice(1);
+
+  const parsed = matches.map(line=>{
 
     let match = line.match(/^(.+?)\s+vs\s+(.+?)\s+(\d{1,2}:\d{2})(?:\s+(bo\d))?$/i);
     if(match){
       return {
         type:"match",
-        t1:match[1].trim(),
-        t2:match[2].trim(),
+        t1:match[1],
+        t2:match[2],
         center:match[3],
         bo: match[4] || "bo3"
       };
@@ -46,15 +50,18 @@ function parseLines(text){
     if(result){
       return {
         type:"result",
-        t1:result[1].trim(),
+        t1:result[1],
         center:result[2],
-        t2:result[3].trim(),
+        t2:result[3],
         bo:""
       };
     }
 
     return null;
+
   }).filter(Boolean);
+
+  return { tournament, games: parsed };
 }
 
 function matchBlock(t1, t2, center, logo1, logo2, bo, isResult){
@@ -84,10 +91,10 @@ return `
 
 bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
   try{
-    const games = parseLines(match[0]);
+    const { tournament, games } = parseInput(match[0]);
 
     if(!games.length){
-      return bot.sendMessage(msg.chat.id, "Невірний формат");
+      return bot.sendMessage(msg.chat.id,"Невірний формат");
     }
 
     let htmlMatches = "";
@@ -121,7 +128,8 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
       .replace("{{TITLE}}", titleText)
       .replace("{{TITLE_SIZE}}", titleSize + "px")
       .replace("{{MATCHES}}", htmlMatches)
-      .replace("{{GRID_CLASS}}", gridClass);
+      .replace("{{GRID_CLASS}}", gridClass)
+      .replace("{{TOURNAMENT}}", tournament);
 
     const browser = await puppeteer.launch({
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
@@ -130,7 +138,8 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
     const page = await browser.newPage();
 
     await page.setViewport({ width: 900, height: 900 });
-    await page.setContent(html);
+
+    await page.setContent(html, { waitUntil: "networkidle0" });
 
     const filePath = path.join(__dirname, "result.png");
 
