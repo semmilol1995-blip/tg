@@ -49,7 +49,6 @@ text-overflow:ellipsis;
 text-shadow:0 0 20px rgba(168,85,247,0.5);
 }
 
-/* 🔥 SUBTITLE + FLAG */
 .subtitle{
 font-size:14px;
 letter-spacing:2px;
@@ -58,24 +57,24 @@ color:rgba(255,255,255,0.7);
 
 display:flex;
 align-items:center;
-justify-content:center;
 gap:6px;
 }
 
-.subtitle img{
-width:18px;
-height:18px;
-display:block;
+/* CENTER BLOCK */
+.matchesArea{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%, -50%);
+
+display:flex;
+flex-direction:column;
+align-items:center;
 }
 
-/* 🔥 ТУРНІР (опустили вниз до матчів) */
+/* TOURNAMENT */
 .tournament{
-position:absolute;
-top:240px; /* 🔥 головний фікс */
-
-left:50%;
-transform:translateX(-50%);
-
+margin-bottom:20px;
 font-size:22px;
 font-weight:800;
 color:#a855f7;
@@ -84,31 +83,27 @@ text-align:center;
 text-shadow:0 0 10px rgba(168,85,247,0.6);
 }
 
-/* CENTER */
-.matchesArea{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%, -50%);
-}
-
+/* GRID */
 .gridWrap{
 width:760px;
 }
 
 .matches{
 display:grid;
-gap:20px;
 }
 
+/* adaptive gaps */
+.matches.gap-big{ gap:28px; }
+.matches.gap-medium{ gap:20px; }
+.matches.gap-small{ gap:14px; }
+
 .matches.one{
-grid-template-columns: 1fr;
+grid-template-columns:1fr;
 }
 
 .matches.two{
-grid-template-columns: 1fr 1fr;
+grid-template-columns:1fr 1fr;
 column-gap:24px;
-row-gap:20px;
 }
 
 /* MATCH */
@@ -192,13 +187,12 @@ opacity:0.7;
 margin-top:2px;
 }
 
-/* 🔥 WATERMARK + TELEGRAM */
+/* WATERMARK */
 .watermark{
 position:absolute;
 bottom:20px;
 left:50%;
 transform:translateX(-50%);
-
 font-size:14px;
 letter-spacing:2px;
 color:rgba(255,255,255,0.25);
@@ -210,9 +204,7 @@ gap:6px;
 
 .watermark img{
 width:16px;
-height:16px;
-filter:invert(1);
-opacity:0.8;
+opacity:0.6;
 }
 </style>
 
@@ -226,29 +218,47 @@ opacity:0.8;
   </div>
 
   <div class="subtitle">
-    СМУГАСТИЙ | ZBR4
-    <img src="https://twemoji.maxcdn.com/v/latest/72x72/1f1fa-1f1e6.png">
+    СМУГАСТИЙ | ZBR4 🇺🇦
   </div>
-</div>
-
-<!-- 🔥 ТУРНІР -->
-<div class="tournament">
-  {{TOURNAMENT}}
 </div>
 
 <div class="matchesArea">
+
+  <div class="tournament">
+    {{TOURNAMENT}}
+  </div>
+
   <div class="gridWrap">
-    <div class="matches {{GRID_CLASS}}">
+    <div class="matches {{GRID_CLASS}}" id="matches">
       {{MATCHES}}
     </div>
   </div>
+
 </div>
 
-<!-- 🔥 WATERMARK -->
 <div class="watermark">
   <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg">
   t.me/zbr4_cast
 </div>
+
+<script>
+const matches = document.querySelectorAll(".match");
+const container = document.getElementById("matches");
+
+const count = matches.length;
+
+container.classList.remove("gap-big","gap-medium","gap-small");
+
+if(count <= 3){
+  container.classList.add("gap-big");
+}
+else if(count <= 6){
+  container.classList.add("gap-medium");
+}
+else{
+  container.classList.add("gap-small");
+}
+</script>
 
 </body>
 </html>
