@@ -42,38 +42,54 @@ white-space:nowrap;
 overflow:hidden;
 }
 
-/* авто розмір */
 .title.small{ font-size:42px; }
 .title.medium{ font-size:52px; }
 .title.big{ font-size:64px; }
 
+/* SUBTITLE (з прапором) */
 .subtitle{
 margin-top:10px;
 font-size:14px;
 opacity:0.7;
 letter-spacing:2px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+gap:6px;
 }
 
-/* 🔥 ЦЕНТР БЛОК */
+.subtitle img{
+width:18px;
+height:18px;
+display:block;
+}
+
+/* ТУРНІР */
+.tournament{
+position:absolute;
+top:260px;
+left:50%;
+transform:translateX(-50%);
+width:760px;
+
+font-size:28px;
+font-weight:900;
+
+color:#c084fc;
+text-align:center;
+
+text-shadow:0 0 12px rgba(168,85,247,0.6);
+}
+
+/* MATCHES */
 .matchesArea{
 position:absolute;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
 display:flex;
-flex-direction:column;
-align-items:center;
-}
-
-/* 🔥 ТУРНІР (ПЕРЕНЕСЕНИЙ) */
-.tournament{
-width:760px;
-margin-bottom:24px;
-font-size:28px; /* трохи більший */
-font-weight:900;
-color:#c084fc;
-text-align:center;
-text-shadow:0 0 12px rgba(168,85,247,0.6);
+justify-content:center;
 }
 
 /* GRID */
@@ -93,6 +109,7 @@ padding:18px 22px;
 border-radius:20px;
 background:rgba(168,85,247,0.08);
 border:1px solid rgba(168,85,247,0.3);
+
 box-shadow:
 0 0 20px rgba(168,85,247,0.4),
 inset 0 0 20px rgba(168,85,247,0.15);
@@ -152,15 +169,28 @@ opacity:0.7;
 margin-top:2px;
 }
 
-/* WATERMARK */
+/* WATERMARK (з Telegram іконкою) */
 .watermark{
 position:absolute;
 bottom:20px;
 left:50%;
 transform:translateX(-50%);
+
 font-size:14px;
 opacity:0.15;
 letter-spacing:2px;
+
+display:flex;
+align-items:center;
+gap:6px;
+}
+
+.watermark img{
+width:16px;
+height:16px;
+filter:invert(1);
+opacity:0.8;
+display:block;
 }
 </style>
 </head>
@@ -170,31 +200,32 @@ letter-spacing:2px;
 <!-- HEADER -->
 <div class="header">
   <div class="title" id="title">{{TITLE}}</div>
-  <div class="subtitle">СМУГАСТИЙ | ZBR4 🇺🇦</div>
-</div>
 
-<!-- CENTER -->
-<div class="matchesArea">
-
-  <!-- 🔥 ТУРНІР ТУТ -->
-  <div class="tournament">
-    {{TOURNAMENT}}
+  <div class="subtitle">
+    СМУГАСТИЙ | ZBR4
+    <img src="https://twemoji.maxcdn.com/v/latest/72x72/1f1fa-1f1e6.png">
   </div>
-
-  <div class="gridWrap" id="matches"></div>
-
 </div>
 
-<div class="watermark">
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-telegram" viewBox="0 0 16 16">
-  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.287 5.906q-1.168.486-4.667 2.01c-.502.214-.684.34-.707.447-.024.113.09.23.364.318l1.45.474.317 1.341a.8.8 0 0 0 .575.575l.136.036a.7.7 0 0 0 .343-.016l.169-.047 1.157-1.157 2.87 2.164c.264.198.482.193.655-.008l3.125-3.57c.175-.205.215-.38.136-.525l-.047-.087-3.518-6.32a.7.7 0 0 0-.343-.343l-.087-.047c-.145-.079-.32-.039-.525.136z"/>
-</svg>
+<!-- ТУРНІР -->
+<div class="tournament">
+  {{TOURNAMENT}}
+</div>
 
-  t.me/zbr4_cast</div>
+<!-- MATCHES -->
+<div class="matchesArea">
+  <div class="gridWrap" id="matches"></div>
+</div>
+
+<!-- WATERMARK -->
+<div class="watermark">
+  <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg">
+  t.me/zbr4_cast
+</div>
 
 <script>
 
-/* 🔥 АДАПТИВНИЙ ЗАГОЛОВОК */
+/* TITLE SIZE */
 const titleEl = document.getElementById("title");
 const len = titleEl.innerText.length;
 
@@ -216,7 +247,7 @@ function getLogo(team){
   return logos[team.toLowerCase()] || "logos/default.png";
 }
 
-/* DATA (бот підставляє) */
+/* DATA */
 const matchesData = {{MATCHES}};
 
 const container = document.getElementById("matches");
