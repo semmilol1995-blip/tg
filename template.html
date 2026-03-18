@@ -2,7 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
 <style>
 body{
 margin:0;
@@ -54,6 +56,17 @@ margin-top:6px;
 color:rgba(255,255,255,0.7);
 }
 
+/* 🔥 НОВИЙ БЛОК */
+.tournament{
+margin-top:10px;
+font-size:20px;
+font-weight:800;
+color:#a855f7;
+text-align:center;
+
+text-shadow:0 0 10px rgba(168,85,247,0.6);
+}
+
 /* CENTER */
 .matchesArea{
 position:absolute;
@@ -103,7 +116,6 @@ inset 0 0 20px rgba(168,85,247,0.12);
 display:flex;
 align-items:center;
 gap:10px;
-
 flex:1;
 min-width:0;
 }
@@ -183,7 +195,12 @@ color:rgba(255,255,255,0.25);
   <div class="title" style="font-size: {{TITLE_SIZE}}">
     {{TITLE}}
   </div>
+
   <div class="subtitle">СМУГАСТИЙ | ZBR4</div>
+
+  <div class="tournament">
+    {{TOURNAMENT}}
+  </div>
 </div>
 
 <div class="matchesArea">
