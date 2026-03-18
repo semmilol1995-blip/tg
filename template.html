@@ -1,57 +1,60 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Matches</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
 body{
-width:1000px;
-height:1000px;
-font-family:Montserrat,sans-serif;
-background:radial-gradient(circle at top,#2a0f4a,#0b0616 70%);
-color:white;
-overflow:hidden;
+margin:0;
+width:900px;
+height:900px;
+font-family:'Inter', sans-serif;
 position:relative;
+
+background:
+radial-gradient(circle at 20% 0%, rgba(168,85,247,0.35), transparent 40%),
+radial-gradient(circle at 80% 20%, rgba(139,92,246,0.25), transparent 50%),
+linear-gradient(160deg,#050508,#0b0515,#050508);
+
+color:white;
 }
 
 /* HEADER */
 .header{
 position:absolute;
-top:80px;
-left:50%;
-transform:translateX(-50%);
-text-align:center;
-width:760px;
+top:40px;
+left:0;
+width:100%;
+display:flex;
+flex-direction:column;
+align-items:center;
 }
 
 .title{
+max-width:760px;
+width:100%;
+padding:0 20px;
+
 font-weight:900;
 color:#c084fc;
-text-shadow:0 0 25px rgba(168,85,247,0.8);
-line-height:1;
+letter-spacing:3px;
+
+text-align:center;
 white-space:nowrap;
 overflow:hidden;
+text-overflow:ellipsis;
+
+text-shadow:0 0 20px rgba(168,85,247,0.5);
 }
 
-.title.small{ font-size:42px; }
-.title.medium{ font-size:52px; }
-.title.big{ font-size:64px; }
-
-/* SUBTITLE */
+/* 🔥 SUBTITLE + FLAG */
 .subtitle{
-margin-top:10px;
 font-size:14px;
-opacity:0.7;
 letter-spacing:2px;
+margin-top:6px;
+color:rgba(255,255,255,0.7);
 
 display:flex;
 align-items:center;
@@ -65,41 +68,47 @@ height:18px;
 display:block;
 }
 
-/* 🔥 ТУРНІР (НЕ В ЦЕНТРІ!) */
+/* 🔥 ТУРНІР (опустили вниз до матчів) */
 .tournament{
 position:absolute;
-top:180px; /* 🔥 ключовий момент */
+top:170px; /* 🔥 головний фікс */
 
 left:50%;
 transform:translateX(-50%);
 
-width:760px;
-
-font-size:30px; /* 🔥 трохи більший */
-font-weight:900;
-
-color:#c084fc;
+font-size:22px;
+font-weight:800;
+color:#a855f7;
 text-align:center;
 
-text-shadow:0 0 12px rgba(168,85,247,0.6);
+text-shadow:0 0 10px rgba(168,85,247,0.6);
 }
 
-/* MATCHES (ЯК БУЛО) */
+/* CENTER */
 .matchesArea{
 position:absolute;
 top:50%;
 left:50%;
-transform:translate(-50%,-50%);
-display:flex;
-justify-content:center;
+transform:translate(-50%, -50%);
 }
 
-/* GRID */
 .gridWrap{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:20px;
 width:760px;
+}
+
+.matches{
+display:grid;
+gap:20px;
+}
+
+.matches.one{
+grid-template-columns: 1fr;
+}
+
+.matches.two{
+grid-template-columns: 1fr 1fr;
+column-gap:24px;
+row-gap:20px;
 }
 
 /* MATCH */
@@ -107,21 +116,24 @@ width:760px;
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:18px 22px;
-border-radius:20px;
+padding:16px 18px;
+
 background:rgba(168,85,247,0.08);
-border:1px solid rgba(168,85,247,0.3);
+border:1px solid rgba(168,85,247,0.35);
+
+border-radius:14px;
 
 box-shadow:
-0 0 20px rgba(168,85,247,0.4),
-inset 0 0 20px rgba(168,85,247,0.15);
+0 0 20px rgba(168,85,247,0.25),
+inset 0 0 20px rgba(168,85,247,0.12);
 }
 
-/* TEAMS */
+/* TEAM */
 .team{
 display:flex;
 align-items:center;
-gap:12px;
+gap:10px;
+flex:1;
 min-width:0;
 }
 
@@ -130,34 +142,43 @@ justify-content:flex-end;
 }
 
 /* LOGO */
-.logo{
+.logoBox{
 width:42px;
 height:42px;
-border-radius:12px;
-background:#1a1a1a;
-object-fit:contain;
-padding:6px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:rgba(255,255,255,0.05);
+border-radius:10px;
+
+box-shadow:0 0 10px rgba(168,85,247,0.5);
+
+flex-shrink:0;
+}
+
+.logoBox img{
+max-width:28px;
+max-height:28px;
 }
 
 /* NAME */
 .name{
-font-weight:700;
 font-size:18px;
+font-weight:800;
+
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
-max-width:120px;
+
+max-width:140px;
 }
 
 /* CENTER */
 .center{
 text-align:center;
-min-width:80px;
-}
-
-.score{
-font-size:22px;
-font-weight:900;
+flex:0 0 80px;
 }
 
 .time{
@@ -166,12 +187,12 @@ font-weight:900;
 }
 
 .bo{
-font-size:12px;
+font-size:11px;
 opacity:0.7;
 margin-top:2px;
 }
 
-/* WATERMARK */
+/* 🔥 WATERMARK + TELEGRAM */
 .watermark{
 position:absolute;
 bottom:20px;
@@ -179,8 +200,8 @@ left:50%;
 transform:translateX(-50%);
 
 font-size:14px;
-opacity:0.15;
 letter-spacing:2px;
+color:rgba(255,255,255,0.25);
 
 display:flex;
 align-items:center;
@@ -192,16 +213,17 @@ width:16px;
 height:16px;
 filter:invert(1);
 opacity:0.8;
-display:block;
 }
 </style>
+
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
-  <div class="title" id="title">{{TITLE}}</div>
+  <div class="title" style="font-size: {{TITLE_SIZE}}">
+    {{TITLE}}
+  </div>
 
   <div class="subtitle">
     СМУГАСТИЙ | ZBR4
@@ -214,72 +236,19 @@ display:block;
   {{TOURNAMENT}}
 </div>
 
-<!-- MATCHES -->
 <div class="matchesArea">
-  <div class="gridWrap" id="matches"></div>
+  <div class="gridWrap">
+    <div class="matches {{GRID_CLASS}}">
+      {{MATCHES}}
+    </div>
+  </div>
 </div>
 
-<!-- WATERMARK -->
+<!-- 🔥 WATERMARK -->
 <div class="watermark">
   <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg">
   t.me/zbr4_cast
 </div>
-
-<script>
-
-/* TITLE SIZE */
-const titleEl = document.getElementById("title");
-const len = titleEl.innerText.length;
-
-if(len < 15) titleEl.classList.add("big");
-else if(len < 25) titleEl.classList.add("medium");
-else titleEl.classList.add("small");
-
-/* LOGOS */
-const logos = {
-  navi:"logos/navi.png",
-  faze:"logos/faze.png",
-  g2:"logos/g2.png",
-  vitality:"logos/vitality.png",
-  mouz:"logos/mouz.png",
-  m80:"logos/m80.png"
-};
-
-function getLogo(team){
-  return logos[team.toLowerCase()] || "logos/default.png";
-}
-
-/* DATA */
-const matchesData = {{MATCHES}};
-
-const container = document.getElementById("matches");
-
-matchesData.forEach(m=>{
-  container.innerHTML += `
-  <div class="match">
-    
-    <div class="team">
-      <img class="logo" src="${getLogo(m.t1)}">
-      <div class="name">${m.t1.toUpperCase()}</div>
-    </div>
-
-    <div class="center">
-      ${m.score 
-        ? `<div class="score">${m.score}</div>` 
-        : `<div class="time">${m.time}</div><div class="bo">${m.bo}</div>`
-      }
-    </div>
-
-    <div class="team right">
-      <div class="name">${m.t2.toUpperCase()}</div>
-      <img class="logo" src="${getLogo(m.t2)}">
-    </div>
-
-  </div>
-  `;
-});
-
-</script>
 
 </body>
 </html>
