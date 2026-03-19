@@ -6,17 +6,15 @@ const path = require("path");
 const token = process.env.TOKEN;
 
 /* =========================
-   BOT INIT (ANTI 409)
+   INIT (ANTI 409)
 ========================= */
 const bot = new TelegramBot(token, { polling: true });
 
 (async () => {
   try {
     await bot.deleteWebHook({ drop_pending_updates: true });
-    console.log("Webhook killed");
-  } catch (e) {
-    console.log("Webhook delete error:", e.message);
-  }
+    console.log("Webhook removed");
+  } catch (e) {}
 })();
 
 /* =========================
@@ -59,7 +57,7 @@ function getTitleSize(text) {
 }
 
 /* =========================
-   PARSE MATCHES
+   PARSE
 ========================= */
 function parseLines(text) {
   const lines = text.split("\n").slice(1);
@@ -94,7 +92,7 @@ function parseLines(text) {
 }
 
 /* =========================
-   MATCH HTML
+   HTML BLOCK
 ========================= */
 function matchBlock(t1, t2, center, logo1, logo2, bo, isResult) {
   return `
@@ -122,7 +120,7 @@ function matchBlock(t1, t2, center, logo1, logo2, bo, isResult) {
 }
 
 /* =========================
-   /post (НЕ ЧІПАЄМО)
+   /post (твій, але з фіксом шрифтів)
 ========================= */
 bot.onText(/\/post([\s\S]*)/, async (msg, match) => {
   try {
@@ -178,7 +176,14 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match) => {
     const page = await browser.newPage();
 
     await page.setViewport({ width: 900, height: 900 });
-    await page.setContent(html);
+
+    /* 🔥 ФІКС ШРИФТІВ */
+    await page.setContent(html, {
+      waitUntil: "networkidle0"
+    });
+
+    await page.evaluateHandle("document.fonts.ready");
+    await new Promise(r => setTimeout(r, 300));
 
     const filePath = path.join(__dirname, "post.png");
 
@@ -194,7 +199,7 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match) => {
 });
 
 /* =========================
-   /news (ФІКС)
+   /news
 ========================= */
 bot.on("message", async (msg) => {
   if (!msg.text) return;
@@ -229,7 +234,12 @@ bot.on("message", async (msg) => {
     const page = await browser.newPage();
 
     await page.setViewport({ width: 900, height: 900 });
-    await page.setContent(html);
+
+    await page.setContent(html, {
+      waitUntil: "networkidle0"
+    });
+
+    await page.evaluateHandle("document.fonts.ready");
 
     const filePath = path.join(__dirname, "news.png");
 
