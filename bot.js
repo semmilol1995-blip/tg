@@ -2,41 +2,27 @@ const TelegramBot = require("node-telegram-bot-api");
 const puppeteer = require("puppeteer");
 const fs = require("fs-extra");
 const path = require("path");
-const express = require("express");
 
 const token = process.env.TOKEN;
-const bot = new TelegramBot(token);
-
-const app = express();
-app.use(express.json());
+const bot = new TelegramBot(token, { polling: true });
 
 /* =========================
-   WEBHOOK
+   FIX PUPPETEER (КРИТИЧНО)
 ========================= */
-app.post(`/${token}`, async (req, res) => {
-  try {
-    console.log("UPDATE:", req.body);
-
-    bot.processUpdate(req.body);
-    res.sendStatus(200);
-  } catch (e) {
-    console.log("Webhook error:", e);
-    res.sendStatus(500);
-  }
-});
-
-app.get("/", (req, res) => {
-  res.send("BOT WORKING 🚀");
-});
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server started");
-});
+async function launchBrowser(){
+  return await puppeteer.launch({
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu"
+    ]
+  });
+}
 
 /* =========================
-   HELPERS
+   LOGOS
 ========================= */
-
 async function getLogoBase64(team){
   const filePath = path.join(__dirname, "logos", `${team}.png`);
 
@@ -56,6 +42,9 @@ function getTitleSize(text){
   return 72;
 }
 
+/* =========================
+   PARSE
+========================= */
 function parseLines(text){
   const lines = text.split("\n").slice(1);
 
@@ -88,6 +77,9 @@ function parseLines(text){
   }).filter(Boolean);
 }
 
+/* =========================
+   MATCH BLOCK
+========================= */
 function matchBlock(t1, t2, center, logo1, logo2, bo, isResult){
 return `
 <div class="match">
@@ -114,9 +106,8 @@ return `
 }
 
 /* =========================
-   /post
+   /post (НЕ ЧІПАЄМО)
 ========================= */
-
 bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
   try{
     const games = parseLines(match[0]);
@@ -149,10 +140,7 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
     const titleText = isResult ? "РЕЗУЛЬТАТИ МАТЧІВ" : "МАТЧІ ДНЯ";
     const titleSize = getTitleSize(titleText);
 
-    let html = await fs.readFile(
-      path.join(__dirname, "template.html"),
-      "utf8"
-    );
+    let html = await fs.readFile(path.join(__dirname, "template.html"), "utf8");
 
     html = html
       .replace("{{TITLE}}", titleText)
@@ -160,11 +148,9 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
       .replace("{{MATCHES}}", htmlMatches)
       .replace("{{GRID_CLASS}}", gridClass);
 
-    const browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    });
-
+    const browser = await launchBrowser();
     const page = await browser.newPage();
+
     await page.setViewport({ width: 900, height: 900 });
     await page.setContent(html);
 
@@ -182,30 +168,36 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
 });
 
 /* =========================
-   /news
+   /news (НОВИЙ + ФІКСИ)
 ========================= */
-
 bot.onText(/\/news([\s\S]*)/, async (msg, match)=>{
   try{
-    const text = match[1].trim();
+    const rawText = match[1].trim();
 
-    if(!text){
+    if(!rawText){
       return bot.sendMessage(msg.chat.id,"Напиши текст новини");
     }
+
+    // 🔥 форматування _фіолетового_
+    const formattedText = rawText
+      .split("_")
+      .map((part, i) =>
+        i % 2 === 1
+          ? `<span class="purple">${part}</span>`
+          : part
+      )
+      .join("");
 
     let html = await fs.readFile(
       path.join(__dirname, "news-template.html"),
       "utf8"
     );
 
-    html = html
-      .replace("{{TEXT}}", text);
+    html = html.replace("{{TEXT}}", formattedText);
 
-    const browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    });
-
+    const browser = await launchBrowser();
     const page = await browser.newPage();
+
     await page.setViewport({ width: 900, height: 900 });
     await page.setContent(html);
 
@@ -217,7 +209,12 @@ bot.onText(/\/news([\s\S]*)/, async (msg, match)=>{
     await bot.sendPhoto(msg.chat.id, filePath);
 
   }catch(e){
-    console.log(e);
+    console.log("NEWS ERROR:", e);
     bot.sendMessage(msg.chat.id,"Помилка news 💀");
   }
 });
+
+/* =========================
+   АНТИ-ВИМИКАННЯ RAILWAY
+========================= */
+setInterval(() => {}, 1000);
