@@ -32,26 +32,6 @@ flex-direction:column;
 align-items:center;
 }
 
-/* 🔥 subtitle тепер зверху */
-.subtitle{
-font-size:14px;
-letter-spacing:2px;
-color:rgba(255,255,255,0.7);
-
-display:flex;
-align-items:center;
-gap:6px;
-
-margin-bottom:10px; /* 🔥 однаковий відступ */
-}
-
-.subtitle img{
-width:18px;
-height:12px;
-object-fit:cover;
-border-radius:2px;
-}
-
 /* TITLE */
 .title{
 max-width:760px;
@@ -69,10 +49,10 @@ text-overflow:ellipsis;
 
 text-shadow:0 0 20px rgba(168,85,247,0.5);
 
-margin-bottom:10px; /* 🔥 однаковий відступ */
+margin-bottom:10px;
 }
 
-/* 🔥 tournament тепер тут */
+/* TOURNAMENT */
 .tournament{
 font-size:22px;
 font-weight:800;
@@ -196,28 +176,29 @@ opacity:0.7;
 margin-top:2px;
 }
 
-/* WATERMARK */
+/* 🔥 WATERMARK (оновлений під лінк як на прикладі) */
 .watermark{
 position:absolute;
 bottom:20px;
 left:50%;
 transform:translateX(-50%);
 
-font-size:14px;
-letter-spacing:2px;
-color:rgba(255,255,255,0.25);
+font-size:16px;
+font-weight:900;
+letter-spacing:1px;
+
+color:rgba(255,255,255,0.85);
 
 display:flex;
 align-items:center;
-gap:6px;
+gap:8px;
 }
 
 .tg-icon{
-width:16px;
-opacity:0.8;
+width:18px;
 
 filter: brightness(0) invert(1)
-drop-shadow(0 0 6px rgba(168,85,247,0.6));
+drop-shadow(0 0 6px rgba(168,85,247,0.8));
 }
 </style>
 
@@ -226,11 +207,6 @@ drop-shadow(0 0 6px rgba(168,85,247,0.6));
 <body>
 
 <div class="header">
-
-  <div class="subtitle">
-    СМУГАСТИЙ | ZBR4 
-    <img src="https://flagcdn.com/w20/ua.png">
-  </div>
 
   <div class="title" style="font-size: {{TITLE_SIZE}}">
     {{TITLE}}
