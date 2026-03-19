@@ -15,6 +15,19 @@ const bot = new TelegramBot(token, { polling: true });
     await bot.deleteWebHook({ drop_pending_updates: true });
     console.log("Webhook removed");
   } catch (e) {}
+
+  /* =========================
+     TG MENU BUTTON
+  ========================= */
+  await bot.setMyCommands([
+    { command: "start", description: "Відкрити меню" }
+  ]);
+
+  await bot.setChatMenuButton({
+    menu_button: {
+      type: "commands"
+    }
+  });
 })();
 
 /* =========================
