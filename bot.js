@@ -18,6 +18,50 @@ const bot = new TelegramBot(token, { polling: true });
 })();
 
 /* =========================
+   /start MENU
+========================= */
+bot.onText(/\/start/, async (msg) => {
+  bot.sendMessage(msg.chat.id, "Обери тип:", {
+    reply_markup: {
+      keyboard: [
+        ["📅 Матчі"],
+        ["🏁 Результати"]
+      ],
+      resize_keyboard: true
+    }
+  });
+});
+
+/* =========================
+   TEMPLATES
+========================= */
+bot.on("message", async (msg) => {
+  if (!msg.text) return;
+
+  if (msg.text === "📅 Матчі") {
+    return bot.sendMessage(msg.chat.id,
+`/post
+BLAST Open Lisbon 2026
+team1 vs team2 13:00 bo3
+team3 vs team4 15:30 bo3
+team5 vs team6 18:00 bo3
+team7 vs team8 20:30 bo3`
+    );
+  }
+
+  if (msg.text === "🏁 Результати") {
+    return bot.sendMessage(msg.chat.id,
+`/post
+BLAST Open Lisbon 2026
+team1 2:1 team2
+team3 2:0 team4
+team5 1:2 team6
+team7 2:1 team8`
+    );
+  }
+});
+
+/* =========================
    PUPPETEER
 ========================= */
 async function launchBrowser() {
