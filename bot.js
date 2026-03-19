@@ -120,7 +120,7 @@ function matchBlock(t1, t2, center, logo1, logo2, bo, isResult) {
 }
 
 /* =========================
-   /post (твій, але з фіксом шрифтів)
+   /post
 ========================= */
 bot.onText(/\/post([\s\S]*)/, async (msg, match) => {
   try {
@@ -177,7 +177,6 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match) => {
 
     await page.setViewport({ width: 900, height: 900 });
 
-    /* 🔥 ФІКС ШРИФТІВ */
     await page.setContent(html, {
       waitUntil: "networkidle0"
     });
@@ -195,62 +194,6 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match) => {
   } catch (e) {
     console.log("POST ERROR:", e);
     bot.sendMessage(msg.chat.id, "Помилка 💀");
-  }
-});
-
-/* =========================
-   /news
-========================= */
-bot.on("message", async (msg) => {
-  if (!msg.text) return;
-  if (!msg.text.startsWith("/news")) return;
-
-  try {
-    console.log("NEWS TRIGGER");
-
-    const rawText = msg.text.replace("/news", "").trim();
-
-    if (!rawText) {
-      return bot.sendMessage(msg.chat.id, "Напиши текст новини");
-    }
-
-    const formattedText = rawText
-      .split("_")
-      .map((part, i) =>
-        i % 2 === 1
-          ? `<span class="purple">${part}</span>`
-          : part
-      )
-      .join("");
-
-    let html = await fs.readFile(
-      path.join(__dirname, "news-template.html"),
-      "utf8"
-    );
-
-    html = html.replace("{{TEXT}}", formattedText);
-
-    const browser = await launchBrowser();
-    const page = await browser.newPage();
-
-    await page.setViewport({ width: 900, height: 900 });
-
-    await page.setContent(html, {
-      waitUntil: "networkidle0"
-    });
-
-    await page.evaluateHandle("document.fonts.ready");
-
-    const filePath = path.join(__dirname, "news.png");
-
-    await page.screenshot({ path: filePath });
-    await browser.close();
-
-    await bot.sendPhoto(msg.chat.id, filePath);
-
-  } catch (e) {
-    console.log("NEWS ERROR:", e);
-    bot.sendMessage(msg.chat.id, "Помилка news 💀");
   }
 });
 
