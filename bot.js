@@ -2,31 +2,38 @@ const TelegramBot = require("node-telegram-bot-api");
 const puppeteer = require("puppeteer");
 const fs = require("fs-extra");
 const path = require("path");
-const fetch = require("node-fetch");
 const express = require("express");
 
 const token = process.env.TOKEN;
-const url = process.env.RAILWAY_STATIC_URL;
-
 const bot = new TelegramBot(token);
-
-bot.setWebHook(`${url}/bot${token}`);
 
 const app = express();
 app.use(express.json());
 
-app.post(`/bot${token}`, (req, res) => {
-  bot.processUpdate(req.body);
-  res.sendStatus(200);
+/* =========================
+   WEBHOOK (ОСНОВА)
+========================= */
+app.post(`/${token}`, async (req, res) => {
+  try {
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
+  } catch (e) {
+    console.log("Webhook error:", e);
+    res.sendStatus(500);
+  }
 });
 
-app.get("/", (req,res)=> res.send("OK"));
+app.get("/", (req, res) => {
+  res.send("BOT WORKING 🚀");
+});
 
-app.listen(process.env.PORT || 3000);
+app.listen(process.env.PORT || 3000, () => {
+  console.log("Server started");
+});
 
-// ======================
-// 🔥 LOGOS
-// ======================
+/* =========================
+   HELPERS
+========================= */
 
 async function getLogoBase64(team){
   const filePath = path.join(__dirname, "logos", `${team}.png`);
@@ -41,15 +48,15 @@ async function getLogoBase64(team){
   return `data:image/png;base64,${file.toString("base64")}`;
 }
 
-// ======================
-// 🔥 POST (ТВОЯ ВЕРСІЯ)
-// ======================
-
 function getTitleSize(text){
   if(text.length > 18) return 48;
   if(text.length > 14) return 58;
   return 72;
 }
+
+/* =========================
+   /post
+========================= */
 
 function parseLines(text){
   const lines = text.split("\n").slice(1);
@@ -87,22 +94,18 @@ function matchBlock(t1, t2, center, logo1, logo2, bo, isResult){
 return `
 <div class="match">
   <div class="team">
-    <div class="logoBox">
-      <img src="${logo1}">
-    </div>
-    <div class="name">${t1}</div>
+    <img src="${logo1}">
+    <div>${t1}</div>
   </div>
 
   <div class="center">
-    <div class="time">${center}</div>
-    ${!isResult ? `<div class="bo">${bo.toUpperCase()}</div>` : ""}
+    <div>${center}</div>
+    ${!isResult ? `<div>${bo.toUpperCase()}</div>` : ""}
   </div>
 
-  <div class="team right">
-    <div class="name">${t2}</div>
-    <div class="logoBox">
-      <img src="${logo2}">
-    </div>
+  <div class="team">
+    <div>${t2}</div>
+    <img src="${logo2}">
   </div>
 </div>
 `;
@@ -136,32 +139,26 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
       );
     }
 
-    const gridClass = games.length >= 6 ? "two" : "one";
-
-    const titleText = isResult ? "РЕЗУЛЬТАТИ МАТЧІВ" : "МАТЧІ ДНЯ";
-    const titleSize = getTitleSize(titleText);
-
-    let html = await fs.readFile(path.join(__dirname, "template.html"), "utf8");
-
-    html = html
-      .replace("{{TITLE}}", titleText)
-      .replace("{{TITLE_SIZE}}", titleSize + "px")
-      .replace("{{MATCHES}}", htmlMatches)
-      .replace("{{GRID_CLASS}}", gridClass);
+    let html = `
+    <html>
+    <body style="background:#0f0f1a;color:white;font-family:sans-serif">
+    <h1>${isResult ? "РЕЗУЛЬТАТИ" : "МАТЧІ ДНЯ"}</h1>
+    ${htmlMatches}
+    </body>
+    </html>
+    `;
 
     const browser = await puppeteer.launch({
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
     const page = await browser.newPage();
-
     await page.setViewport({ width: 900, height: 900 });
     await page.setContent(html);
 
-    const filePath = path.join(__dirname, "result.png");
+    const filePath = path.join(__dirname, "post.png");
 
     await page.screenshot({ path: filePath });
-
     await browser.close();
 
     await bot.sendPhoto(msg.chat.id, filePath);
@@ -172,96 +169,76 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
   }
 });
 
-// ======================
-// 🔥 NEWS (ТВОЯ ІДЕАЛЬНА ВЕРСІЯ)
-// ======================
+/* =========================
+   /news
+========================= */
 
-function formatNewsText(text){
-  text = text.replace(/_(.*?)_/g, '|||$1|||');
-
-  const parts = text.split("|||");
-
-  let result = "";
-
-  parts.forEach((part, index)=>{
-    const isAccent = index % 2 !== 0;
-
-    const words = part.split(" ");
-    let lines = [];
-
-    while(words.length){
-      lines.push(words.splice(0, 5).join(" "));
-    }
-
-    lines.forEach(l=>{
-      result += `<span class="line ${isAccent ? "accent" : ""}">${l}</span>`;
-    });
-  });
-
-  return result;
-}
-
-function getFontSize(text){
-  const len = text.length;
-
-  if(len < 80) return 44;
-  if(len < 140) return 38;
-  if(len < 220) return 32;
-  return 28;
-}
-
-bot.on("message", async (msg)=>{
+bot.onText(/\/news([\s\S]*)/, async (msg, match)=>{
   try{
-    if(!msg.caption || !msg.caption.startsWith("/news")) return;
+    const text = match[1].trim();
 
-    let fileId = msg.photo?.pop()?.file_id || msg.document?.file_id;
-
-    if(!fileId){
-      return bot.sendMessage(msg.chat.id,"Додай картинку разом з /news");
+    if(!text){
+      return bot.sendMessage(msg.chat.id,"Напиши текст новини");
     }
 
-    const lines = msg.caption.split("\n").slice(1);
+    const html = `
+    <html>
+    <body style="
+      margin:0;
+      width:900px;
+      height:900px;
+      background:url('https://i.imgur.com/yourimage.jpg') center/cover;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      align-items:center;
+      color:white;
+      font-family:sans-serif;
+    ">
 
-    const label = lines[0] || "НОВИНА";
-    const content = lines.slice(1).join(" ");
+    <div style="
+      background:rgba(0,0,0,0.85);
+      border:2px solid #a855f7;
+      padding:40px;
+      width:80%;
+      text-align:center;
+      margin-bottom:80px;
+    ">
+      <div style="color:#a855f7;font-size:40px;font-weight:bold">
+        ${text}
+      </div>
+    </div>
 
-    const file = await bot.getFile(fileId);
-    const fileUrl = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
+    <div style="
+      position:absolute;
+      bottom:20px;
+      font-size:20px;
+      opacity:0.8;
+    ">
+      t.me/zbr4_cast
+    </div>
 
-    const res = await fetch(fileUrl);
-    const buffer = await res.arrayBuffer();
-
-    const imageBase64 = `data:image/jpeg;base64,${Buffer.from(buffer).toString("base64")}`;
-
-    const fontSize = getFontSize(content);
-
-    let html = await fs.readFile(path.join(__dirname,"news-template.html"),"utf8");
-
-    html = html
-      .replace("{{IMAGE}}", imageBase64)
-      .replace("{{LABEL}}", label.toUpperCase())
-      .replace("{{TEXT}}", formatNewsText(content))
-      .replace("{{FONTSIZE}}", fontSize + "px");
+    </body>
+    </html>
+    `;
 
     const browser = await puppeteer.launch({
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
     const page = await browser.newPage();
-
-    await page.setViewport({ width:900, height:900 });
+    await page.setViewport({ width: 900, height: 900 });
     await page.setContent(html);
 
-    const out = path.join(__dirname,"news.png");
+    const filePath = path.join(__dirname, "news.png");
 
-    await page.screenshot({ path: out });
-
+    await page.screenshot({ path: filePath });
     await browser.close();
 
-    await bot.sendPhoto(msg.chat.id, out);
+    await bot.sendPhoto(msg.chat.id, filePath);
 
   }catch(e){
     console.log(e);
-    bot.sendMessage(msg.chat.id,"Помилка 💀");
+    bot.sendMessage(msg.chat.id,"Помилка news 💀");
   }
 });
