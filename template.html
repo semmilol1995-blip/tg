@@ -32,6 +32,27 @@ flex-direction:column;
 align-items:center;
 }
 
+/* 🔥 subtitle тепер зверху */
+.subtitle{
+font-size:14px;
+letter-spacing:2px;
+color:rgba(255,255,255,0.7);
+
+display:flex;
+align-items:center;
+gap:6px;
+
+margin-bottom:10px; /* 🔥 однаковий відступ */
+}
+
+.subtitle img{
+width:18px;
+height:12px;
+object-fit:cover;
+border-radius:2px;
+}
+
+/* TITLE */
 .title{
 max-width:760px;
 width:100%;
@@ -47,24 +68,18 @@ overflow:hidden;
 text-overflow:ellipsis;
 
 text-shadow:0 0 20px rgba(168,85,247,0.5);
+
+margin-bottom:10px; /* 🔥 однаковий відступ */
 }
 
-.subtitle{
-font-size:14px;
-letter-spacing:2px;
-margin-top:6px;
-color:rgba(255,255,255,0.7);
+/* 🔥 tournament тепер тут */
+.tournament{
+font-size:22px;
+font-weight:800;
+color:#a855f7;
+text-align:center;
 
-display:flex;
-align-items:center;
-gap:6px;
-}
-
-.subtitle img{
-width:18px;
-height:12px;
-object-fit:cover;
-border-radius:2px;
+text-shadow:0 0 10px rgba(168,85,247,0.6);
 }
 
 /* CENTER BLOCK */
@@ -77,17 +92,6 @@ transform:translate(-50%, -50%);
 display:flex;
 flex-direction:column;
 align-items:center;
-}
-
-/* TOURNAMENT */
-.tournament{
-margin-bottom:20px;
-font-size:22px;
-font-weight:800;
-color:#a855f7;
-text-align:center;
-
-text-shadow:0 0 10px rgba(168,85,247,0.6);
 }
 
 /* GRID */
@@ -166,19 +170,19 @@ max-width:28px;
 max-height:28px;
 }
 
-/* NAME — 🔥 ФІКС */
+/* NAME */
 .name{
 font-size:15px;
 font-weight:800;
 
 white-space:nowrap;
-flex-shrink:0; /* 🔥 головне */
+flex-shrink:0;
 }
 
 /* CENTER */
 .center{
 text-align:center;
-flex:0 0 65px; /* 🔥 зменшено */
+flex:0 0 65px;
 }
 
 .time{
@@ -222,21 +226,23 @@ drop-shadow(0 0 6px rgba(168,85,247,0.6));
 <body>
 
 <div class="header">
-  <div class="title" style="font-size: {{TITLE_SIZE}}">
-    {{TITLE}}
-  </div>
 
   <div class="subtitle">
     СМУГАСТИЙ | ZBR4 
     <img src="https://flagcdn.com/w20/ua.png">
   </div>
-</div>
 
-<div class="matchesArea">
+  <div class="title" style="font-size: {{TITLE_SIZE}}">
+    {{TITLE}}
+  </div>
 
   <div class="tournament">
     {{TOURNAMENT}}
   </div>
+
+</div>
+
+<div class="matchesArea">
 
   <div class="gridWrap">
     <div class="matches {{GRID_CLASS}}" id="matches">
