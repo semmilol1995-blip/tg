@@ -119,6 +119,7 @@ display:flex;
 align-items:center;
 justify-content:space-between;
 padding:16px 18px;
+gap:12px;
 
 background:rgba(168,85,247,0.08);
 border:1px solid rgba(168,85,247,0.35);
@@ -165,22 +166,19 @@ max-width:28px;
 max-height:28px;
 }
 
-/* NAME */
+/* NAME — 🔥 ФІКС */
 .name{
 font-size:18px;
 font-weight:800;
 
 white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
-
-max-width:200px;
+flex-shrink:0; /* 🔥 головне */
 }
 
 /* CENTER */
 .center{
 text-align:center;
-flex:0 0 80px;
+flex:0 0 65px; /* 🔥 зменшено */
 }
 
 .time{
@@ -210,15 +208,13 @@ align-items:center;
 gap:6px;
 }
 
-.watermark img{
-width:16px;
-opacity:0.6;
-}
-
 .tg-icon{
 width:16px;
 opacity:0.8;
-filter: brightness(0) invert(1);
+
+filter: brightness(0) invert(1)
+drop-shadow(0 0 6px rgba(168,85,247,0.6));
+}
 </style>
 
 </head>
