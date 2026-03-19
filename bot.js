@@ -11,10 +11,12 @@ const app = express();
 app.use(express.json());
 
 /* =========================
-   WEBHOOK (ОСНОВА)
+   WEBHOOK
 ========================= */
 app.post(`/${token}`, async (req, res) => {
   try {
+    console.log("UPDATE:", req.body);
+
     bot.processUpdate(req.body);
     res.sendStatus(200);
   } catch (e) {
@@ -54,10 +56,6 @@ function getTitleSize(text){
   return 72;
 }
 
-/* =========================
-   /post
-========================= */
-
 function parseLines(text){
   const lines = text.split("\n").slice(1);
 
@@ -94,22 +92,30 @@ function matchBlock(t1, t2, center, logo1, logo2, bo, isResult){
 return `
 <div class="match">
   <div class="team">
-    <img src="${logo1}">
-    <div>${t1}</div>
+    <div class="logoBox">
+      <img src="${logo1}">
+    </div>
+    <div class="name">${t1}</div>
   </div>
 
   <div class="center">
-    <div>${center}</div>
-    ${!isResult ? `<div>${bo.toUpperCase()}</div>` : ""}
+    <div class="time">${center}</div>
+    ${!isResult ? `<div class="bo">${bo.toUpperCase()}</div>` : ""}
   </div>
 
-  <div class="team">
-    <div>${t2}</div>
-    <img src="${logo2}">
+  <div class="team right">
+    <div class="name">${t2}</div>
+    <div class="logoBox">
+      <img src="${logo2}">
+    </div>
   </div>
 </div>
 `;
 }
+
+/* =========================
+   /post
+========================= */
 
 bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
   try{
@@ -139,14 +145,20 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
       );
     }
 
-    let html = `
-    <html>
-    <body style="background:#0f0f1a;color:white;font-family:sans-serif">
-    <h1>${isResult ? "РЕЗУЛЬТАТИ" : "МАТЧІ ДНЯ"}</h1>
-    ${htmlMatches}
-    </body>
-    </html>
-    `;
+    const gridClass = games.length >= 6 ? "two" : "one";
+    const titleText = isResult ? "РЕЗУЛЬТАТИ МАТЧІВ" : "МАТЧІ ДНЯ";
+    const titleSize = getTitleSize(titleText);
+
+    let html = await fs.readFile(
+      path.join(__dirname, "template.html"),
+      "utf8"
+    );
+
+    html = html
+      .replace("{{TITLE}}", titleText)
+      .replace("{{TITLE_SIZE}}", titleSize + "px")
+      .replace("{{MATCHES}}", htmlMatches)
+      .replace("{{GRID_CLASS}}", gridClass);
 
     const browser = await puppeteer.launch({
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
@@ -181,46 +193,13 @@ bot.onText(/\/news([\s\S]*)/, async (msg, match)=>{
       return bot.sendMessage(msg.chat.id,"Напиши текст новини");
     }
 
-    const html = `
-    <html>
-    <body style="
-      margin:0;
-      width:900px;
-      height:900px;
-      background:url('https://i.imgur.com/yourimage.jpg') center/cover;
-      display:flex;
-      flex-direction:column;
-      justify-content:flex-end;
-      align-items:center;
-      color:white;
-      font-family:sans-serif;
-    ">
+    let html = await fs.readFile(
+      path.join(__dirname, "news-template.html"),
+      "utf8"
+    );
 
-    <div style="
-      background:rgba(0,0,0,0.85);
-      border:2px solid #a855f7;
-      padding:40px;
-      width:80%;
-      text-align:center;
-      margin-bottom:80px;
-    ">
-      <div style="color:#a855f7;font-size:40px;font-weight:bold">
-        ${text}
-      </div>
-    </div>
-
-    <div style="
-      position:absolute;
-      bottom:20px;
-      font-size:20px;
-      opacity:0.8;
-    ">
-      t.me/zbr4_cast
-    </div>
-
-    </body>
-    </html>
-    `;
+    html = html
+      .replace("{{TEXT}}", text);
 
     const browser = await puppeteer.launch({
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
