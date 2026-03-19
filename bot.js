@@ -4,10 +4,16 @@ const fs = require("fs-extra");
 const path = require("path");
 
 const token = process.env.TOKEN;
-const bot = new TelegramBot(token, { polling: true });
 
 /* =========================
-   FIX PUPPETEER (КРИТИЧНО)
+   АНТИ 409 (КРИТИЧНО)
+========================= */
+const bot = new TelegramBot(token, { polling: true });
+
+bot.deleteWebHook(); // 💣 гарантія що webhook не заважає
+
+/* =========================
+   PUPPETEER (СТАБІЛЬНО)
 ========================= */
 async function launchBrowser(){
   return await puppeteer.launch({
@@ -36,6 +42,9 @@ async function getLogoBase64(team){
   return `data:image/png;base64,${file.toString("base64")}`;
 }
 
+/* =========================
+   TITLE SIZE
+========================= */
 function getTitleSize(text){
   if(text.length > 18) return 48;
   if(text.length > 14) return 58;
@@ -43,7 +52,7 @@ function getTitleSize(text){
 }
 
 /* =========================
-   PARSE
+   PARSE MATCHES
 ========================= */
 function parseLines(text){
   const lines = text.split("\n").slice(1);
@@ -78,7 +87,7 @@ function parseLines(text){
 }
 
 /* =========================
-   MATCH BLOCK
+   MATCH HTML
 ========================= */
 function matchBlock(t1, t2, center, logo1, logo2, bo, isResult){
 return `
@@ -106,11 +115,20 @@ return `
 }
 
 /* =========================
-   /post (НЕ ЧІПАЄМО)
+   /post
 ========================= */
 bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
   try{
-    const games = parseLines(match[0]);
+    console.log("POST TRIGGER");
+
+    const lines = match[0]
+      .split("\n")
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    const tournament = lines[1] || "";
+
+    const games = parseLines("/post\n" + lines.slice(2).join("\n"));
 
     if(!games.length){
       return bot.sendMessage(msg.chat.id, "Невірний формат");
@@ -146,7 +164,8 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
       .replace("{{TITLE}}", titleText)
       .replace("{{TITLE_SIZE}}", titleSize + "px")
       .replace("{{MATCHES}}", htmlMatches)
-      .replace("{{GRID_CLASS}}", gridClass);
+      .replace("{{GRID_CLASS}}", gridClass)
+      .replace("{{TOURNAMENT}}", tournament);
 
     const browser = await launchBrowser();
     const page = await browser.newPage();
@@ -162,23 +181,24 @@ bot.onText(/\/post([\s\S]*)/, async (msg, match)=>{
     await bot.sendPhoto(msg.chat.id, filePath);
 
   }catch(e){
-    console.log(e);
+    console.log("POST ERROR:", e);
     bot.sendMessage(msg.chat.id,"Помилка 💀");
   }
 });
 
 /* =========================
-   /news (НОВИЙ + ФІКСИ)
+   /news
 ========================= */
 bot.onText(/\/news([\s\S]*)/, async (msg, match)=>{
   try{
+    console.log("NEWS TRIGGER");
+
     const rawText = match[1].trim();
 
     if(!rawText){
       return bot.sendMessage(msg.chat.id,"Напиши текст новини");
     }
 
-    // 🔥 форматування _фіолетового_
     const formattedText = rawText
       .split("_")
       .map((part, i) =>
@@ -215,6 +235,6 @@ bot.onText(/\/news([\s\S]*)/, async (msg, match)=>{
 });
 
 /* =========================
-   АНТИ-ВИМИКАННЯ RAILWAY
+   АНТИ ВИМИКАННЯ
 ========================= */
 setInterval(() => {}, 1000);
