@@ -1,0 +1,27 @@
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#0f0f0f;
+  color:#fff;
+}
+
+.app{
+  padding:20px;
+}
+
+input,textarea{
+  width:100%;
+  margin:10px 0;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+}
+
+button{
+  width:100%;
+  padding:15px;
+  background:#ffcc00;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+}
