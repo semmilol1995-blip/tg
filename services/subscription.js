@@ -1,15 +1,16 @@
-async function checkAll(bot, userId, channels) {
-  for (let ch of channels) {
-    try {
-      const m = await bot.telegram.getChatMember(ch, userId);
+async function checkAll(bot, userId, channels){
+  for(let ch of channels){
+    try{
+      const member = await bot.telegram.getChatMember(ch, userId);
 
-      if (!['member','administrator','creator'].includes(m.status)) {
+      if(!['member','administrator','creator'].includes(member.status)){
         return false;
       }
-    } catch {
+    }catch{
       return false;
     }
   }
+
   return true;
 }
 
