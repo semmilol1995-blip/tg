@@ -131,3 +131,44 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, ()=>{
   console.log('🌐 WEB READY ON', PORT);
 });
+// ---------- AUTO FINISH ----------
+setInterval(async ()=>{
+  const r = await db.query(`SELECT * FROM giveaways WHERE status='active'`);
+  const now = Date.now();
+
+  for(let g of r.rows){
+    if(now >= g.end_time){
+
+      const users = await db.query(
+        `SELECT * FROM participants WHERE giveaway_id=$1`,
+        [g.id]
+      );
+
+      if(!users.rows.length) continue;
+
+      const winners = [];
+
+      while(winners.length < g.winners){
+        const u = users.rows[Math.floor(Math.random()*users.rows.length)];
+        if(!winners.includes(u)) winners.push(u);
+      }
+
+      let text = '🎉 РЕЗУЛЬТАТИ\n\n';
+
+      winners.forEach((w,i)=>{
+        text += `${i+1}. @${w.username}\n`;
+      });
+
+      const channels = JSON.parse(g.channels);
+
+      for(let ch of channels){
+        await bot.telegram.sendMessage(ch, text);
+      }
+
+      await db.query(
+        `UPDATE giveaways SET status='finished' WHERE id=$1`,
+        [g.id]
+      );
+    }
+  }
+}, 10000);
