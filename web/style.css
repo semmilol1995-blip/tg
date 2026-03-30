@@ -6,12 +6,19 @@ body{
 }
 
 .app{
-  padding:20px;
+  padding:15px;
 }
 
-input,textarea{
+.card{
+  background:#1a1a1a;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:10px;
+}
+
+textarea,input{
   width:100%;
-  margin:10px 0;
+  margin:8px 0;
   padding:10px;
   border-radius:10px;
   border:none;
@@ -19,9 +26,14 @@ input,textarea{
 
 button{
   width:100%;
-  padding:15px;
-  background:#ffcc00;
+  padding:12px;
   border:none;
   border-radius:10px;
+  background:#00ffa6;
   font-weight:bold;
+}
+
+label{
+  display:flex;
+  gap:10px;
 }
