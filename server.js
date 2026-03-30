@@ -172,3 +172,29 @@ setInterval(async ()=>{
     }
   }
 }, 10000);
+
+app.post('/reroll', async (req,res)=>{
+  const id = req.body.id;
+
+  const users = await db.query(
+    `SELECT * FROM participants WHERE giveaway_id=$1`,
+    [id]
+  );
+
+  if(!users.rows.length){
+    return res.json({ok:false});
+  }
+
+  const winner = users.rows[Math.floor(Math.random()*users.rows.length)];
+
+  const text = `🔄 НОВИЙ ПЕРЕМОЖЕЦЬ\n\n@${winner.username}`;
+
+  const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
+  const channels = JSON.parse(g.rows[0].channels);
+
+  for(let ch of channels){
+    await bot.telegram.sendMessage(ch, text);
+  }
+
+  res.json({ok:true});
+});
