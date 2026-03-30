@@ -5,11 +5,10 @@ const crypto = require('crypto');
 
 const db = require('./db');
 const state = require('./state');
-const { checkAll } = require('./services/subscription');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// ---------- INIT DB ----------
+// ---------- DB ----------
 (async ()=>{
   await db.query(`CREATE TABLE IF NOT EXISTS channels(
     id SERIAL,
@@ -38,7 +37,31 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
   )`);
 })();
 
-// ---------- CHECK CHANNEL ----------
+// ---------- MENU ----------
+function menu(){
+  return Markup.inlineKeyboard([
+    [{text:'🎁 Створити',callback_data:'create'}],
+    [{text:'📊 Розіграші',callback_data:'list'}],
+    [{text:'⚙️ Канали',callback_data:'channels'}]
+  ]);
+}
+
+// ---------- START (DEEP LINK) ----------
+bot.start(async ctx=>{
+  const param = ctx.message.text.split(' ')[1];
+
+  if(param && param.startsWith('join_')){
+    const id = param.split('_')[1];
+
+    await joinUser(ctx, id);
+
+    return ctx.reply('✅ Ти береш участь');
+  }
+
+  ctx.reply('🎁 Меню', menu());
+});
+
+// ---------- CHANNEL CHECK ----------
 async function checkChannel(username, userId){
   try{
     const chat = await bot.telegram.getChat(username);
@@ -56,20 +79,6 @@ async function checkChannel(username, userId){
     return {error:'not_found'};
   }
 }
-
-// ---------- MENU ----------
-function menu(){
-  return Markup.inlineKeyboard([
-    [{text:'🎁 Створити',callback_data:'create'}],
-    [{text:'📊 Розіграші',callback_data:'list'}],
-    [{text:'⚙️ Канали',callback_data:'channels'}]
-  ]);
-}
-
-// ---------- START ----------
-bot.start(ctx=>{
-  ctx.reply('🎁 Меню', menu());
-});
 
 // ---------- CHANNELS ----------
 bot.action('channels', async ctx=>{
@@ -139,26 +148,17 @@ bot.action('create', async ctx=>{
   ctx.reply('Текст розіграшу:');
 });
 
-// ---------- MAIN FLOW ----------
+// ---------- FLOW ----------
 bot.on('text', async ctx=>{
   const s = state.get(ctx.from.id);
   if(!s) return;
 
-  // ---------- ADD CHANNEL ----------
   if(s.step==='add_channel'){
     const check = await checkChannel(ctx.message.text, ctx.from.id);
 
-    if(check.error === 'not_found'){
-      return ctx.reply('❌ Канал не знайдено');
-    }
-
-    if(check.error === 'bot'){
-      return ctx.reply('❌ Додай бота в адміни');
-    }
-
-    if(check.error === 'user'){
-      return ctx.reply('❌ Ти не адмін');
-    }
+    if(check.error === 'not_found') return ctx.reply('❌ Канал не знайдено');
+    if(check.error === 'bot') return ctx.reply('❌ Додай бота в адміни');
+    if(check.error === 'user') return ctx.reply('❌ Ти не адмін');
 
     await db.query(
       `INSERT INTO channels(user_id,chat_id,username)
@@ -171,7 +171,6 @@ bot.on('text', async ctx=>{
     return;
   }
 
-  // ---------- CREATE FLOW ----------
   if(s.step==='text'){
     s.text = ctx.message.text;
     s.step='winners';
@@ -208,13 +207,6 @@ ${s.text}
   }
 });
 
-// ---------- CANCEL ----------
-bot.action('cancel', async ctx=>{
-  await ctx.answerCbQuery();
-  state.clear(ctx.from.id);
-  ctx.reply('❌ Скасовано');
-});
-
 // ---------- PUBLISH ----------
 bot.action('publish', async ctx=>{
   await ctx.answerCbQuery();
@@ -240,7 +232,10 @@ bot.action('publish', async ctx=>{
     await bot.telegram.sendMessage(ch,s.text,{
       reply_markup:{
         inline_keyboard:[
-          [{text:s.button,callback_data:`join_${id}`}]
+          [{
+            text:s.button,
+            url:`https://t.me/${process.env.BOT_USERNAME}?start=join_${id}`
+          }]
         ]
       }
     });
@@ -251,17 +246,16 @@ bot.action('publish', async ctx=>{
 });
 
 // ---------- JOIN ----------
-bot.action(/join_(\d+)/, async ctx=>{
-  await ctx.answerCbQuery();
-
-  const id = ctx.match[1];
-
+async function joinUser(ctx,id){
   const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
   const channels = JSON.parse(g.rows[0].channels);
 
-  const ok = await checkAll(bot, ctx.from.id, channels);
-
-  if(!ok) return ctx.reply('❌ Підпишись на всі канали');
+  for(let ch of channels){
+    const m = await bot.telegram.getChatMember(ch, ctx.from.id);
+    if(!['member','administrator','creator'].includes(m.status)){
+      return ctx.reply('❌ Підпишись на всі канали');
+    }
+  }
 
   try{
     await db.query(
@@ -270,15 +264,8 @@ bot.action(/join_(\d+)/, async ctx=>{
     );
   }catch{}
 
-  ctx.answerCbQuery('✅ Ти в розіграші');
-
-try{
-  await bot.telegram.sendMessage(
-    ctx.from.id,
-    '🎁 Ти успішно береш участь!'
-  );
-}catch{}
-});
+  ctx.reply('✅ Ти береш участь');
+}
 
 // ---------- AUTO FINISH ----------
 setInterval(async ()=>{
@@ -317,4 +304,4 @@ setInterval(async ()=>{
 },5000);
 
 bot.launch();
-console.log('🔥 CLEAN ARCH READY');
+console.log('🔥 PRO V2 READY');
