@@ -78,7 +78,7 @@ bot.start(async (ctx) => {
 
 // ---------- SETTINGS ----------
 bot.action('settings', async (ctx)=>{
-  await ctx.answerCbQuery(); // 🔥 ОБОВʼЯЗКОВО
+  await ctx.answerCbQuery();
 
   state.set(ctx.from.id,{step:'add_channel'});
   ctx.reply('📩 Перешли будь-який пост з каналу');
@@ -110,6 +110,8 @@ bot.on('message', async ctx=>{
 
 // ---------- CREATE ----------
 bot.action('create', async ctx=>{
+  await ctx.answerCbQuery();
+
   const ch = await db.query(`SELECT * FROM channels WHERE user_id=$1`,[ctx.from.id]);
 
   if(!ch.rows.length) return ctx.reply('❌ Спочатку додай канал');
@@ -124,7 +126,9 @@ bot.action('create', async ctx=>{
 });
 
 // toggle channels
-bot.action(/ch_(.+)/, ctx=>{
+bot.action(/ch_(.+)/, async ctx=>{
+  await ctx.answerCbQuery('✔️');
+
   const s = state.get(ctx.from.id);
   const id = ctx.match[1];
 
@@ -132,11 +136,12 @@ bot.action(/ch_(.+)/, ctx=>{
   else s.channels = s.channels.filter(x=>x!==id);
 
   state.set(ctx.from.id,s);
-  ctx.answerCbQuery('✔️');
 });
 
 // next
-bot.action('next', ctx=>{
+bot.action('next', async ctx=>{
+  await ctx.answerCbQuery();
+
   const s = state.get(ctx.from.id);
   if(!s.channels.length) return ctx.answerCbQuery('Обери хоча б 1');
 
@@ -197,8 +202,15 @@ bot.on('photo', ctx=>{
 });
 
 // ---------- FINISH CREATE ----------
-bot.action('cap_yes', ctx=>finish(ctx,true));
-bot.action('cap_no', ctx=>finish(ctx,false));
+bot.action('cap_yes', async ctx=>{
+  await ctx.answerCbQuery();
+  finish(ctx,true);
+});
+
+bot.action('cap_no', async ctx=>{
+  await ctx.answerCbQuery();
+  finish(ctx,false);
+});
 
 async function finish(ctx,captcha){
   const s = state.get(ctx.from.id);
@@ -237,6 +249,8 @@ async function finish(ctx,captcha){
 
 // ---------- JOIN ----------
 bot.action(/join_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
   if(!allow(ctx.from.id)) return;
 
   const id = ctx.match[1];
@@ -254,6 +268,8 @@ bot.action(/join_(\d+)/, async ctx=>{
 
 // ---------- CHECK ----------
 bot.action(/check_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
   const id = ctx.match[1];
 
   const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
@@ -285,8 +301,11 @@ bot.action(/check_(\d+)/, async ctx=>{
 
 // ---------- CAPTCHA ----------
 bot.action(/cap_(.+)_(.+)_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
   const [_,sel,target,id] = ctx.match;
   if(sel!==target) return ctx.answerCbQuery('❌');
+
   await add(ctx,id);
 });
 
@@ -308,6 +327,8 @@ async function add(ctx,id){
 
 // ---------- LIST ----------
 bot.action('list', async ctx=>{
+  await ctx.answerCbQuery();
+
   const r = await db.query(
     `SELECT * FROM giveaways WHERE owner_id=$1 ORDER BY id DESC`,
     [ctx.from.id]
@@ -323,7 +344,9 @@ bot.action('list', async ctx=>{
 });
 
 // ---------- GIVEAWAY MENU ----------
-bot.action(/g_(\d+)/, ctx=>{
+bot.action(/g_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
   const id = ctx.match[1];
 
   ctx.reply(`🎁 Розіграш #${id}`,{
@@ -341,6 +364,8 @@ bot.action(/g_(\d+)/, ctx=>{
 
 // ---------- USERS ----------
 bot.action(/users_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
   const r = await db.query(
     `SELECT COUNT(*) FROM participants WHERE giveaway_id=$1`,
     [ctx.match[1]]
@@ -351,6 +376,8 @@ bot.action(/users_(\d+)/, async ctx=>{
 
 // ---------- EXPORT ----------
 bot.action(/export_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
   const id = ctx.match[1];
 
   const r = await db.query(
@@ -369,6 +396,8 @@ bot.action(/export_(\d+)/, async ctx=>{
 
 // ---------- REROLL ----------
 bot.action(/reroll_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
   const r = await db.query(
     `SELECT * FROM participants WHERE giveaway_id=$1`,
     [ctx.match[1]]
@@ -381,6 +410,8 @@ bot.action(/reroll_(\d+)/, async ctx=>{
 
 // ---------- CANCEL ----------
 bot.action(/cancel_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
   await db.query(
     `UPDATE giveaways SET status='canceled' WHERE id=$1`,
     [ctx.match[1]]
@@ -391,6 +422,8 @@ bot.action(/cancel_(\d+)/, async ctx=>{
 
 // ---------- FINISH ----------
 bot.action(/finish_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
   await finishGiveaway(ctx.match[1]);
   ctx.reply('⛔ Завершено');
 });
