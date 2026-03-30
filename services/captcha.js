@@ -1,9 +1,12 @@
-function genCaptcha() {
-  const arr = ['🐶','🐱','🐸','🦊','🐼','🐵'];
-  const target = arr[Math.floor(Math.random()*arr.length)];
-  const shuffled = [...arr].sort(()=>Math.random()-0.5);
+function genCaptcha(){
+  const nums = ['1','2','3','4','5','6','7','8','9'];
 
-  return { target, buttons: shuffled };
+  const target = nums[Math.floor(Math.random()*nums.length)];
+
+  return {
+    target,
+    buttons: nums.sort(()=>Math.random()-0.5).slice(0,6)
+  };
 }
 
 module.exports = { genCaptcha };
