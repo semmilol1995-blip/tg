@@ -15,23 +15,37 @@
 
 <div class="app">
 
-<h2>🎁 Giveaway Panel</h2>
+<!-- HEADER -->
+<div class="header">
+  <h2>🎁 Giveaway Panel</h2>
+</div>
 
-<div id="list">Завантаження...</div>
-<button onclick="reroll(${g.id})">🔄 Рерол</button>
-<h3>Канали</h3>
-<div id="channels"></div>
+<!-- GIVEAWAYS LIST -->
+<div class="section">
+  <h3>📊 Розіграші</h3>
+  <div id="list">Завантаження...</div>
+</div>
 
-<hr>
+<!-- CHANNELS -->
+<div class="section">
+  <h3>📢 Канали</h3>
+  <div id="channels"></div>
+</div>
 
-<h3>Створити</h3>
+<!-- CREATE -->
+<div class="section create">
+  <h3>🚀 Створити розіграш</h3>
 
-<textarea id="text" placeholder="Текст"></textarea>
-<input id="winners" type="number" placeholder="Переможців">
-<input id="date" type="datetime-local">
-<input id="button" placeholder="Кнопка">
+  <textarea id="text" placeholder="Текст розіграшу"></textarea>
 
-<button onclick="create()">🚀 Створити</button>
+  <input id="winners" type="number" placeholder="Кількість переможців">
+
+  <input id="date" type="datetime-local">
+
+  <input id="button" placeholder="Текст кнопки">
+
+  <button class="main-btn" onclick="create()">🚀 Створити</button>
+</div>
 
 </div>
 
