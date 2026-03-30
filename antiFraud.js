@@ -1,15 +1,13 @@
-const lastJoin = new Map();
+const last = new Map();
 
-function allow(userId){
+function allow(id){
   const now = Date.now();
 
-  if(lastJoin.has(userId)){
-    if(now - lastJoin.get(userId) < 3000){
-      return false;
-    }
+  if(last.has(id)){
+    if(now - last.get(id) < 2000) return false;
   }
 
-  lastJoin.set(userId, now);
+  last.set(id, now);
   return true;
 }
 
