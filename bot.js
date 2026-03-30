@@ -98,25 +98,7 @@ bot.action('add', async ctx=>{
   ctx.reply('Введи @channel');
 });
 
-bot.on('text', async ctx=>{
-  const s = state.get(ctx.from.id);
-  if(!s) return;
 
-  if(s.step==='add_channel'){
-    const check = await checkChannel(ctx.message.text, ctx.from.id);
-
-    if(check.error) return ctx.reply('❌ Помилка або нема прав');
-
-    await db.query(
-      `INSERT INTO channels(user_id,chat_id,username)
-       VALUES($1,$2,$3)`,
-      [ctx.from.id, check.chat.id, ctx.message.text]
-    );
-
-    ctx.reply('✅ Додано');
-    state.clear(ctx.from.id);
-  }
-});
 
 // ---------- CREATE ----------
 bot.action('create', async ctx=>{
@@ -138,7 +120,31 @@ bot.action('create', async ctx=>{
 bot.on('text', ctx=>{
   const s = state.get(ctx.from.id);
   if(!s) return;
+if(s.step === 'add_channel'){
+  const check = await checkChannel(ctx.message.text, ctx.from.id);
 
+  if(check.error === 'not_found'){
+    return ctx.reply('❌ Канал не знайдено');
+  }
+
+  if(check.error === 'bot'){
+    return ctx.reply('❌ Додай бота в адміни');
+  }
+
+  if(check.error === 'user'){
+    return ctx.reply('❌ Ти не адмін');
+  }
+
+  await db.query(
+    `INSERT INTO channels(user_id,chat_id,username)
+     VALUES($1,$2,$3)`,
+    [ctx.from.id, check.chat.id, ctx.message.text]
+  );
+
+  ctx.reply('✅ Канал додано');
+  state.clear(ctx.from.id);
+  return;
+}
   if(s.step==='text'){
     s.text = ctx.message.text;
     s.step='winners';
