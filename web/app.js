@@ -5,7 +5,7 @@ const user = tg.initDataUnsafe?.user?.id || 0;
 
 let selectedChannels = [];
 
-// ---------- LOAD ----------
+// ---------- LOAD GIVEAWAYS ----------
 async function load(){
   const res = await fetch(`/giveaways/${user}`);
   const data = await res.json();
@@ -16,15 +16,31 @@ async function load(){
   data.forEach(g=>{
     list.innerHTML += `
       <div class="card">
-        <b>#${g.id}</b><br>
-        ${g.text}<br>
-        <button onclick="del(${g.id})">❌</button>
+
+        <div class="card-header">
+          <b>#${g.id}</b>
+          <span class="status ${g.status}">${g.status}</span>
+        </div>
+
+        <div class="card-body">
+          ${g.text || 'Без тексту'}
+        </div>
+
+        <div class="card-footer">
+          🏆 ${g.winners}
+        </div>
+
+        <div class="actions">
+          <button class="btn reroll" onclick="reroll(${g.id})">🔄 Рерол</button>
+          <button class="btn delete" onclick="del(${g.id})">✖ Видалити</button>
+        </div>
+
       </div>
     `;
   });
 }
 
-// ---------- CHANNELS ----------
+// ---------- LOAD CHANNELS ----------
 async function loadChannels(){
   const res = await fetch(`/channels/${user}`);
   const data = await res.json();
@@ -44,11 +60,14 @@ async function loadChannels(){
   });
 }
 
+// ---------- SELECT CHANNEL ----------
 function toggleChannel(el){
   const id = Number(el.value);
 
   if(el.checked){
-    selectedChannels.push(id);
+    if(!selectedChannels.includes(id)){
+      selectedChannels.push(id);
+    }
   } else {
     selectedChannels = selectedChannels.filter(c=>c!==id);
   }
@@ -73,7 +92,8 @@ async function create(){
     })
   });
 
-  tg.showAlert('✅ Створено');
+  tg.showAlert('✅ Розіграш створено');
+
   load();
 }
 
@@ -88,20 +108,7 @@ async function del(id){
   load();
 }
 
-// ---------- INIT ----------
-load();
-loadChannels();
-list.innerHTML += `
-  <div class="card">
-    <b>#${g.id}</b><br>
-    ${g.text}<br>
-    🏆 ${g.winners}<br>
-    ${g.status}<br>
-
-    <button onclick="reroll(${g.id})">🔄 Рерол</button>
-    <button onclick="del(${g.id})">❌ Видалити</button>
-  </div>
-`;
+// ---------- REROLL ----------
 async function reroll(id){
   await fetch('/reroll',{
     method:'POST',
@@ -111,3 +118,7 @@ async function reroll(id){
 
   tg.showAlert('🔄 Новий переможець обраний');
 }
+
+// ---------- INIT ----------
+load();
+loadChannels();
