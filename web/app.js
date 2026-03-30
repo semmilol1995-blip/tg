@@ -91,3 +91,14 @@ async function del(id){
 // ---------- INIT ----------
 load();
 loadChannels();
+list.innerHTML += `
+  <div class="card">
+    <b>#${g.id}</b><br>
+    ${g.text}<br>
+    🏆 ${g.winners}<br>
+    ${g.status}<br>
+
+    <button onclick="reroll(${g.id})">🔄 Рерол</button>
+    <button onclick="del(${g.id})">❌ Видалити</button>
+  </div>
+`;
