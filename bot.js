@@ -41,9 +41,32 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 function menu(){
   return Markup.inlineKeyboard([
     [{text:'🎁 Створити',callback_data:'create'}],
-    [{text:'📊 Розіграші',callback_data:'list'}],
     [{text:'⚙️ Канали',callback_data:'channels'}]
   ]);
+}
+
+// ---------- BUILDER UI ----------
+function renderBuilder(s){
+  return {
+    text:
+`🎁 Створення розіграшу
+
+📢 Канали: ${s.channels.length}
+✍️ Текст: ${s.text ? '✅' : '❌'}
+🏆 Переможців: ${s.winners || '—'}
+📅 Дата: ${s.time ? new Date(s.time).toLocaleString() : '❌'}
+🔘 Кнопка: ${s.button || '❌'}`,
+    kb:{
+      inline_keyboard:[
+        [{text:'✍️ Текст',callback_data:'set_text'}],
+        [{text:'🏆 Переможці',callback_data:'set_winners'}],
+        [{text:'📅 Дата',callback_data:'set_date'}],
+        [{text:'🔘 Кнопка',callback_data:'set_button'}],
+        [{text:'✅ Опублікувати',callback_data:'publish'}],
+        [{text:'❌ Скасувати',callback_data:'cancel'}]
+      ]
+    }
+  };
 }
 
 // ---------- CALENDAR ----------
@@ -53,7 +76,6 @@ function buildCalendar(offset = 0){
 
   const year = base.getFullYear();
   const month = base.getMonth();
-
   const lastDay = new Date(year, month+1, 0).getDate();
 
   const rows = [];
@@ -69,51 +91,26 @@ function buildCalendar(offset = 0){
       callback_data: `pick_${date.toISOString()}`
     });
 
-    if(row.length === 5){
+    if(row.length===5){
       rows.push(row);
-      row = [];
+      row=[];
     }
   }
 
   if(row.length) rows.push(row);
 
   rows.push([
-    {text:'⬅️', callback_data:`cal_${offset-1}`},
-    {text:'➡️', callback_data:`cal_${offset+1}`}
+    {text:'⬅️',callback_data:`cal_${offset-1}`},
+    {text:'➡️',callback_data:`cal_${offset+1}`}
   ]);
 
   return rows;
 }
 
 // ---------- START ----------
-bot.start(async ctx=>{
-  const param = ctx.message.text.split(' ')[1];
-
-  if(param && param.startsWith('join_')){
-    const id = param.split('_')[1];
-    await joinUser(ctx, id);
-    return ctx.reply('✅ Ти береш участь');
-  }
-
-  ctx.reply('🎁 Меню', menu());
+bot.start(ctx=>{
+  ctx.reply('🎁 Меню',menu());
 });
-
-// ---------- CHANNEL CHECK ----------
-async function checkChannel(username, userId){
-  try{
-    const chat = await bot.telegram.getChat(username);
-
-    const botMember = await bot.telegram.getChatMember(chat.id, bot.botInfo.id);
-    const userMember = await bot.telegram.getChatMember(chat.id, userId);
-
-    if(!['administrator','creator'].includes(botMember.status)) return {error:'bot'};
-    if(!['administrator','creator'].includes(userMember.status)) return {error:'user'};
-
-    return {chat};
-  }catch{
-    return {error:'not_found'};
-  }
-}
 
 // ---------- CREATE ----------
 bot.action('create', async ctx=>{
@@ -122,61 +119,82 @@ bot.action('create', async ctx=>{
   const ch = await db.query(`SELECT * FROM channels WHERE user_id=$1`,[ctx.from.id]);
   if(!ch.rows.length) return ctx.reply('❌ Додай канал');
 
-  state.set(ctx.from.id,{
-    step:'text',
-    channels: ch.rows.map(c=>c.chat_id)
-  });
+  const s = {
+    step:'builder',
+    channels: ch.rows.map(c=>c.chat_id),
+    text:null,
+    winners:null,
+    time:null,
+    button:null
+  };
 
-  ctx.reply('Текст розіграшу:');
+  state.set(ctx.from.id,s);
+
+  const ui = renderBuilder(s);
+  ctx.editMessageText(ui.text,{reply_markup:ui.kb});
 });
 
-// ---------- FLOW ----------
+// ---------- BUILDER ACTIONS ----------
+bot.action('set_text', async ctx=>{
+  await ctx.answerCbQuery();
+  const s = state.get(ctx.from.id);
+  s.step='input_text';
+  ctx.reply('Введи текст:');
+});
+
+bot.action('set_winners', async ctx=>{
+  await ctx.answerCbQuery();
+  const s = state.get(ctx.from.id);
+  s.step='input_winners';
+  ctx.reply('Скільки переможців?');
+});
+
+bot.action('set_button', async ctx=>{
+  await ctx.answerCbQuery();
+  const s = state.get(ctx.from.id);
+  s.step='input_button';
+  ctx.reply('Текст кнопки:');
+});
+
+bot.action('set_date', async ctx=>{
+  await ctx.answerCbQuery();
+  const s = state.get(ctx.from.id);
+  s.step='calendar';
+
+  ctx.editMessageText('📅 Обери дату',{
+    reply_markup:{inline_keyboard:buildCalendar()}
+  });
+});
+
+// ---------- TEXT HANDLER ----------
 bot.on('text', async ctx=>{
   const s = state.get(ctx.from.id);
   if(!s) return;
 
-  if(s.step==='text'){
+  if(s.step==='input_text'){
     s.text = ctx.message.text;
-    s.step='winners';
-    return ctx.reply('К-сть переможців:');
   }
 
-  if(s.step==='winners'){
+  if(s.step==='input_winners'){
     s.winners = Number(ctx.message.text);
-    s.step='calendar';
-    return ctx.reply(
-      '📅 Обери дату:',
-      {reply_markup:{inline_keyboard:buildCalendar()}}
-    );
   }
 
-  if(s.step==='button'){
+  if(s.step==='input_button'){
     s.button = ctx.message.text;
-    s.step='preview';
-
-    return ctx.reply(
-`🎁 ПРЕВʼЮ
-
-${s.text}
-
-🏆 ${s.winners} переможців`,
-      Markup.inlineKeyboard([
-        [{text:'✅ Опублікувати',callback_data:'publish'}]
-      ])
-    );
   }
+
+  s.step='builder';
+
+  const ui = renderBuilder(s);
+  ctx.reply(ui.text,{reply_markup:ui.kb});
 });
 
 // ---------- CALENDAR NAV ----------
 bot.action(/cal_(.+)/, async ctx=>{
   await ctx.answerCbQuery();
-
-  const offset = Number(ctx.match[1]);
-
-  ctx.editMessageText(
-    '📅 Обери дату:',
-    {reply_markup:{inline_keyboard:buildCalendar(offset)}}
-  );
+  ctx.editMessageText('📅 Обери дату',{
+    reply_markup:{inline_keyboard:buildCalendar(Number(ctx.match[1]))}
+  });
 });
 
 // ---------- PICK DATE ----------
@@ -184,41 +202,35 @@ bot.action(/pick_(.+)/, async ctx=>{
   await ctx.answerCbQuery();
 
   const s = state.get(ctx.from.id);
-
   s.date = ctx.match[1];
-  s.step = 'time';
 
-  ctx.editMessageText(
-    '⏰ Обери час:',
-    {
-      reply_markup:{
-        inline_keyboard:[
-          [{text:'10:00',callback_data:'t_10'}],
-          [{text:'12:00',callback_data:'t_12'}],
-          [{text:'15:00',callback_data:'t_15'}],
-          [{text:'18:00',callback_data:'t_18'}],
-          [{text:'21:00',callback_data:'t_21'}]
-        ]
-      }
+  ctx.editMessageText('⏰ Обери час',{
+    reply_markup:{
+      inline_keyboard:[
+        [{text:'10:00',callback_data:'t_10'}],
+        [{text:'12:00',callback_data:'t_12'}],
+        [{text:'15:00',callback_data:'t_15'}],
+        [{text:'18:00',callback_data:'t_18'}],
+        [{text:'21:00',callback_data:'t_21'}]
+      ]
     }
-  );
+  });
 });
 
-// ---------- PICK TIME ----------
+// ---------- TIME ----------
 bot.action(/t_(\d+)/, async ctx=>{
   await ctx.answerCbQuery();
 
   const s = state.get(ctx.from.id);
 
-  const hour = Number(ctx.match[1]);
   const d = new Date(s.date);
-
-  d.setHours(hour,0,0);
+  d.setHours(Number(ctx.match[1]),0,0);
 
   s.time = d.getTime();
-  s.step = 'button';
+  s.step='builder';
 
-  ctx.editMessageText('🔘 Введи текст кнопки:');
+  const ui = renderBuilder(s);
+  ctx.editMessageText(ui.text,{reply_markup:ui.kb});
 });
 
 // ---------- PUBLISH ----------
@@ -226,6 +238,10 @@ bot.action('publish', async ctx=>{
   await ctx.answerCbQuery();
 
   const s = state.get(ctx.from.id);
+
+  if(!s.text || !s.winners || !s.time || !s.button){
+    return ctx.answerCbQuery('❌ Заповни всі поля');
+  }
 
   const r = await db.query(
     `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button)
@@ -259,27 +275,12 @@ bot.action('publish', async ctx=>{
   state.clear(ctx.from.id);
 });
 
-// ---------- JOIN ----------
-async function joinUser(ctx,id){
-  const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
-  const channels = JSON.parse(g.rows[0].channels);
-
-  for(let ch of channels){
-    const m = await bot.telegram.getChatMember(ch, ctx.from.id);
-    if(!['member','administrator','creator'].includes(m.status)){
-      return ctx.reply('❌ Підпишись на всі канали');
-    }
-  }
-
-  try{
-    await db.query(
-      `INSERT INTO participants VALUES(DEFAULT,$1,$2,$3)`,
-      [id,ctx.from.id,ctx.from.username||'no']
-    );
-  }catch{}
-
-  ctx.reply('✅ Ти береш участь');
-}
+// ---------- CANCEL ----------
+bot.action('cancel', async ctx=>{
+  await ctx.answerCbQuery();
+  state.clear(ctx.from.id);
+  ctx.editMessageText('❌ Скасовано',menu());
+});
 
 // ---------- AUTO FINISH ----------
 setInterval(async ()=>{
@@ -318,4 +319,4 @@ setInterval(async ()=>{
 },5000);
 
 bot.launch();
-console.log('🔥 FULL CALENDAR READY');
+console.log('🔥 ULTIMATE UI READY');
