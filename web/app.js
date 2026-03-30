@@ -5,7 +5,7 @@ const user = tg.initDataUnsafe?.user?.id || 0;
 
 let selectedChannels = [];
 
-// ---------- LOAD GIVEAWAYS ----------
+// ---------- LOAD ----------
 async function load(){
   const res = await fetch(`/giveaways/${user}`);
   const data = await res.json();
@@ -18,8 +18,7 @@ async function load(){
       <div class="card">
         <b>#${g.id}</b><br>
         ${g.text}<br>
-        🏆 ${g.winners}<br>
-        ${g.status}
+        <button onclick="del(${g.id})">❌</button>
       </div>
     `;
   });
@@ -75,6 +74,16 @@ async function create(){
   });
 
   tg.showAlert('✅ Створено');
+  load();
+}
+
+// ---------- DELETE ----------
+async function del(id){
+  await fetch('/delete',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id})
+  });
 
   load();
 }
