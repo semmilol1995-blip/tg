@@ -270,7 +270,14 @@ bot.action(/join_(\d+)/, async ctx=>{
     );
   }catch{}
 
-  ctx.reply('✅ Участь прийнята');
+  ctx.answerCbQuery('✅ Ти в розіграші');
+
+try{
+  await bot.telegram.sendMessage(
+    ctx.from.id,
+    '🎁 Ти успішно береш участь!'
+  );
+}catch{}
 });
 
 // ---------- AUTO FINISH ----------
