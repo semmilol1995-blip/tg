@@ -102,3 +102,12 @@ list.innerHTML += `
     <button onclick="del(${g.id})">❌ Видалити</button>
   </div>
 `;
+async function reroll(id){
+  await fetch('/reroll',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id})
+  });
+
+  tg.showAlert('🔄 Новий переможець обраний');
+}
