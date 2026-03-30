@@ -106,27 +106,32 @@ bot.action('settings', async (ctx)=>{
 });
 
 // ---------- ADD CHANNEL ----------
-bot.on('message', async ctx=>{
-  const s = state.get(ctx.from.id);
+bot.on(['message', 'channel_post'], async ctx=>{
+  const s = state.get(ctx.from?.id);
   if(!s) return;
 
   if(s.step==='add_channel'){
     try{
-      if(!ctx.message.forward_from_chat){
-  return ctx.reply('❌ Перешли саме пост з каналу');
-}
+      if(!ctx.message?.forward_from_chat){
+        return ctx.reply('❌ Перешли саме пост з каналу');
+      }
 
-const chat = ctx.message.forward_from_chat;
+      const chat = ctx.message.forward_from_chat;
 
       await db.query(
         `INSERT INTO channels(user_id,chat_id,username)
          VALUES($1,$2,$3)`,
-        [ctx.from.id, chat.id, chat.username]
+        [
+          ctx.from.id,
+          chat.id,
+          '@'+(chat.username || 'private')
+        ]
       );
 
       ctx.reply('✅ Канал додано');
-    }catch{
-      ctx.reply('❌ Не вийшло додати');
+    }catch(e){
+      console.log(e); // 🔥 тепер побачиш помилку
+      ctx.reply('❌ Помилка додавання');
     }
 
     state.clear(ctx.from.id);
