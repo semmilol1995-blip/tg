@@ -77,9 +77,11 @@ bot.start(async (ctx) => {
 });
 
 // ---------- SETTINGS ----------
-bot.action('settings', ctx=>{
+bot.action('settings', async (ctx)=>{
+  await ctx.answerCbQuery(); // 🔥 ОБОВʼЯЗКОВО
+
   state.set(ctx.from.id,{step:'add_channel'});
-  ctx.reply('Перешли повідомлення з каналу');
+  ctx.reply('📩 Перешли будь-який пост з каналу');
 });
 
 // ---------- ADD CHANNEL ----------
