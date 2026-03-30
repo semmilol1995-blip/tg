@@ -10,6 +10,25 @@ const { allow } = require('./antiFraud');
 
 const { genCaptcha } = require('./services/captcha');
 const { checkAll } = require('./services/subscription');
+function showPreview(ctx, s) {
+  return ctx.reply(
+`🎁 ПРЕВʼЮ
+
+${s.text}
+
+🏆 ${s.winners} переможців
+⏱ ${Math.floor((s.time - Date.now())/60000)} хв`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '✅ Опублікувати', callback_data: 'publish' }],
+          [{ text: '✏️ Змінити текст', callback_data: 'edit_text' }],
+          [{ text: '🔘 Змінити кнопку', callback_data: 'edit_button' }]
+        ]
+      }
+    }
+  );
+}
 
 // ---------- KEYBOARD ----------
 function subKeyboard(channels, id) {
@@ -176,7 +195,17 @@ bot.on('text', ctx=>{
     state.set(ctx.from.id,s);
     return ctx.reply('🔘 Текст кнопки');
   }
+if(s.step==='edit_text'){
+  s.text = ctx.message.text;
+  s.step = 'preview';
+  return showPreview(ctx, s);
+}
 
+if(s.step==='edit_button'){
+  s.button = ctx.message.text;
+  s.step = 'preview';
+  return showPreview(ctx, s);
+}
   if(s.step==='button'){
     s.button = ctx.message.text;
     s.step='captcha';
@@ -204,15 +233,51 @@ bot.on('photo', ctx=>{
 // ---------- FINISH CREATE ----------
 bot.action('cap_yes', async ctx=>{
   await ctx.answerCbQuery();
-  finish(ctx,true);
+
+  const s = state.get(ctx.from.id);
+  s.captcha = true;
+  s.step = 'preview';
+
+  showPreview(ctx, s);
 });
 
 bot.action('cap_no', async ctx=>{
   await ctx.answerCbQuery();
-  finish(ctx,false);
+
+  const s = state.get(ctx.from.id);
+  s.captcha = false;
+  s.step = 'preview';
+
+  showPreview(ctx, s);
+});
+bot.action('edit_text', async ctx=>{
+  await ctx.answerCbQuery();
+
+  const s = state.get(ctx.from.id);
+  s.step = 'edit_text';
+
+  ctx.reply('✏️ Введи новий текст:');
 });
 
+bot.action('edit_button', async ctx=>{
+  await ctx.answerCbQuery();
+
+  const s = state.get(ctx.from.id);
+  s.step = 'edit_button';
+
+  ctx.reply('🔘 Введи новий текст кнопки:');
+});
 async function finish(ctx,captcha){
+  const s = state.get(ctx.from.id);
+
+  s.captcha = captcha;
+  s.step = 'preview';
+
+  showPreview(ctx, s);
+}
+bot.action('publish', async ctx=>{
+  await ctx.answerCbQuery();
+
   const s = state.get(ctx.from.id);
 
   const r = await db.query(
@@ -226,7 +291,7 @@ async function finish(ctx,captcha){
       s.winners,
       s.time,
       s.button,
-      captcha
+      s.captcha
     ]
   );
 
@@ -243,9 +308,9 @@ async function finish(ctx,captcha){
     });
   }
 
-  ctx.reply('✅ Розіграш створено');
+  ctx.reply('✅ Опубліковано');
   state.clear(ctx.from.id);
-}
+});
 
 // ---------- JOIN ----------
 bot.action(/join_(\d+)/, async ctx=>{
