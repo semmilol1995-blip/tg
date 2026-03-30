@@ -2,12 +2,9 @@ require('dotenv').config();
 
 const { Telegraf, Markup } = require('telegraf');
 const crypto = require('crypto');
-const fs = require('fs');
 
 const db = require('./db');
 const state = require('./state');
-const { allow } = require('./antiFraud');
-const { genCaptcha } = require('./services/captcha');
 const { checkAll } = require('./services/subscription');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -29,7 +26,6 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
     winners INT,
     end_time BIGINT,
     button TEXT,
-    captcha BOOLEAN,
     status TEXT DEFAULT 'active'
   )`);
 
@@ -61,16 +57,21 @@ async function checkChannel(username, userId){
   }
 }
 
-// ---------- START ----------
-bot.start(ctx=>{
-  ctx.reply('🎁 Меню',Markup.inlineKeyboard([
+// ---------- MENU ----------
+function menu(){
+  return Markup.inlineKeyboard([
     [{text:'🎁 Створити',callback_data:'create'}],
     [{text:'📊 Розіграші',callback_data:'list'}],
     [{text:'⚙️ Канали',callback_data:'channels'}]
-  ]));
+  ]);
+}
+
+// ---------- START ----------
+bot.start(ctx=>{
+  ctx.reply('🎁 Меню', menu());
 });
 
-// ---------- CHANNELS UI ----------
+// ---------- CHANNELS ----------
 bot.action('channels', async ctx=>{
   await ctx.answerCbQuery();
 
@@ -86,7 +87,8 @@ bot.action('channels', async ctx=>{
           {text:c.username,callback_data:'noop'},
           {text:'❌',callback_data:`del_${c.chat_id}`}
         ]),
-        [{text:'➕ Додати',callback_data:'add'}]
+        [{text:'➕ Додати',callback_data:'add'}],
+        [{text:'⬅️ Назад',callback_data:'back'}]
       ]
     }
   });
@@ -98,7 +100,25 @@ bot.action('add', async ctx=>{
   ctx.reply('Введи @channel');
 });
 
+bot.action(/del_(.+)/, async ctx=>{
+  await ctx.answerCbQuery();
 
+  await db.query(
+    `DELETE FROM channels WHERE chat_id=$1 AND user_id=$2`,
+    [ctx.match[1], ctx.from.id]
+  );
+
+  ctx.answerCbQuery('❌ Видалено');
+  ctx.editMessageText('Оновлено', menu());
+});
+
+bot.action('back', async ctx=>{
+  await ctx.answerCbQuery();
+  state.clear(ctx.from.id);
+  ctx.editMessageText('🎁 Меню', menu());
+});
+
+bot.action('noop', ctx=>ctx.answerCbQuery());
 
 // ---------- CREATE ----------
 bot.action('create', async ctx=>{
@@ -111,40 +131,47 @@ bot.action('create', async ctx=>{
 
   if(!ch.rows.length) return ctx.reply('❌ Додай канал');
 
-  state.set(ctx.from.id,{step:'text',channels:ch.rows.map(c=>c.chat_id)});
+  state.set(ctx.from.id,{
+    step:'text',
+    channels: ch.rows.map(c=>c.chat_id)
+  });
 
   ctx.reply('Текст розіграшу:');
 });
 
-// ---------- FLOW ----------
-bot.on('text', ctx=>{
+// ---------- MAIN FLOW ----------
+bot.on('text', async ctx=>{
   const s = state.get(ctx.from.id);
   if(!s) return;
-if(s.step === 'add_channel'){
-  const check = await checkChannel(ctx.message.text, ctx.from.id);
 
-  if(check.error === 'not_found'){
-    return ctx.reply('❌ Канал не знайдено');
+  // ---------- ADD CHANNEL ----------
+  if(s.step==='add_channel'){
+    const check = await checkChannel(ctx.message.text, ctx.from.id);
+
+    if(check.error === 'not_found'){
+      return ctx.reply('❌ Канал не знайдено');
+    }
+
+    if(check.error === 'bot'){
+      return ctx.reply('❌ Додай бота в адміни');
+    }
+
+    if(check.error === 'user'){
+      return ctx.reply('❌ Ти не адмін');
+    }
+
+    await db.query(
+      `INSERT INTO channels(user_id,chat_id,username)
+       VALUES($1,$2,$3)`,
+      [ctx.from.id, check.chat.id, ctx.message.text]
+    );
+
+    ctx.reply('✅ Канал додано');
+    state.clear(ctx.from.id);
+    return;
   }
 
-  if(check.error === 'bot'){
-    return ctx.reply('❌ Додай бота в адміни');
-  }
-
-  if(check.error === 'user'){
-    return ctx.reply('❌ Ти не адмін');
-  }
-
-  await db.query(
-    `INSERT INTO channels(user_id,chat_id,username)
-     VALUES($1,$2,$3)`,
-    [ctx.from.id, check.chat.id, ctx.message.text]
-  );
-
-  ctx.reply('✅ Канал додано');
-  state.clear(ctx.from.id);
-  return;
-}
+  // ---------- CREATE FLOW ----------
   if(s.step==='text'){
     s.text = ctx.message.text;
     s.step='winners';
@@ -170,12 +197,22 @@ if(s.step === 'add_channel'){
     return ctx.reply(
 `🎁 ПРЕВʼЮ
 
-${s.text}`,
+${s.text}
+
+🏆 ${s.winners} переможців`,
       Markup.inlineKeyboard([
-        [{text:'✅ Опублікувати',callback_data:'publish'}]
+        [{text:'✅ Опублікувати',callback_data:'publish'}],
+        [{text:'❌ Скасувати',callback_data:'cancel'}]
       ])
     );
   }
+});
+
+// ---------- CANCEL ----------
+bot.action('cancel', async ctx=>{
+  await ctx.answerCbQuery();
+  state.clear(ctx.from.id);
+  ctx.reply('❌ Скасовано');
 });
 
 // ---------- PUBLISH ----------
@@ -226,15 +263,17 @@ bot.action(/join_(\d+)/, async ctx=>{
 
   if(!ok) return ctx.reply('❌ Підпишись на всі канали');
 
-  await db.query(
-    `INSERT INTO participants VALUES(DEFAULT,$1,$2,$3)`,
-    [id,ctx.from.id,ctx.from.username||'no']
-  );
+  try{
+    await db.query(
+      `INSERT INTO participants VALUES(DEFAULT,$1,$2,$3)`,
+      [id,ctx.from.id,ctx.from.username||'no']
+    );
+  }catch{}
 
   ctx.reply('✅ Участь прийнята');
 });
 
-// ---------- FINISH ----------
+// ---------- AUTO FINISH ----------
 setInterval(async ()=>{
   const r = await db.query(`SELECT * FROM giveaways WHERE status='active'`);
   const now = Date.now();
@@ -252,7 +291,7 @@ setInterval(async ()=>{
       const winners = [];
 
       while(winners.length<g.winners){
-        const u = users.rows[crypto.randomInt(0,users.rows.length)];
+        const u = users.rows[Math.floor(Math.random()*users.rows.length)];
         if(!winners.includes(u)) winners.push(u);
       }
 
@@ -271,4 +310,4 @@ setInterval(async ()=>{
 },5000);
 
 bot.launch();
-console.log('🔥 CHANNEL BOT READY');
+console.log('🔥 CLEAN ARCH READY');
