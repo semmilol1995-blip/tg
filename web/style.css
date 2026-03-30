@@ -1,55 +1,113 @@
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#0f0f0f;
-  color:#fff;
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+const user = tg.initDataUnsafe?.user?.id || 0;
+
+let selectedChannels = [];
+
+// ---------- LOAD ----------
+async function load(){
+  const res = await fetch(`/giveaways/${user}`);
+  const data = await res.json();
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  data.forEach(g=>{
+    list.innerHTML += `
+      <div class="card">
+        <b>#${g.id}</b><br>
+        ${g.text}<br>
+        <button onclick="del(${g.id})">❌</button>
+      </div>
+    `;
+  });
 }
 
-.app{
-  padding:15px;
+// ---------- CHANNELS ----------
+async function loadChannels(){
+  const res = await fetch(`/channels/${user}`);
+  const data = await res.json();
+
+  const box = document.getElementById('channels');
+  box.innerHTML = '';
+
+  data.forEach(ch=>{
+    box.innerHTML += `
+      <div class="card">
+        <label>
+          <input type="checkbox" value="${ch.chat_id}" onchange="toggleChannel(this)">
+          ${ch.username}
+        </label>
+      </div>
+    `;
+  });
 }
 
-.card{
-  background:#1a1a1a;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:10px;
+function toggleChannel(el){
+  const id = Number(el.value);
+
+  if(el.checked){
+    selectedChannels.push(id);
+  } else {
+    selectedChannels = selectedChannels.filter(c=>c!==id);
+  }
 }
 
-textarea,input{
-  width:100%;
-  margin:8px 0;
-  padding:10px;
-  border-radius:10px;
-  border:none;
+// ---------- CREATE ----------
+async function create(){
+  if(!selectedChannels.length){
+    return tg.showAlert('❌ Обери канал');
+  }
+
+  await fetch('/create',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      user_id:user,
+      text:document.getElementById('text').value,
+      winners:Number(document.getElementById('winners').value),
+      time:new Date(document.getElementById('date').value).getTime(),
+      button:document.getElementById('button').value,
+      channels:selectedChannels
+    })
+  });
+
+  tg.showAlert('✅ Створено');
+  load();
 }
 
-button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:#00ffa6;
-  font-weight:bold;
+// ---------- DELETE ----------
+async function del(id){
+  await fetch('/delete',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id})
+  });
+
+  load();
 }
 
-label{
-  display:flex;
-  gap:10px;
-}
-button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  margin-top:6px;
-  font-weight:bold;
-}
+// ---------- INIT ----------
+load();
+loadChannels();
+list.innerHTML += `
+  <div class="card">
+    <b>#${g.id}</b><br>
+    ${g.text}<br>
+    🏆 ${g.winners}<br>
+    ${g.status}<br>
 
-button:nth-child(1){
-  background:#00ffa6;
-}
+    <button onclick="reroll(${g.id})">🔄 Рерол</button>
+    <button onclick="del(${g.id})">❌ Видалити</button>
+  </div>
+`;
+async function reroll(id){
+  await fetch('/reroll',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id})
+  });
 
-button:nth-child(2){
-  background:#ff4d4d;
+  tg.showAlert('🔄 Новий переможець обраний');
 }
