@@ -100,7 +100,9 @@ bot.action('settings', async (ctx)=>{
   await ctx.answerCbQuery();
 
   state.set(ctx.from.id,{step:'add_channel'});
-  ctx.reply('📩 Перешли будь-який пост з каналу');
+  ctx.editMessageText(
+  '⚙️ Налаштування\n\n📩 Перешли будь-який пост з каналу'
+);
 });
 
 // ---------- ADD CHANNEL ----------
@@ -110,7 +112,11 @@ bot.on('message', async ctx=>{
 
   if(s.step==='add_channel'){
     try{
-      const chat = ctx.message.forward_from_chat;
+      if(!ctx.message.forward_from_chat){
+  return ctx.reply('❌ Перешли саме пост з каналу');
+}
+
+const chat = ctx.message.forward_from_chat;
 
       await db.query(
         `INSERT INTO channels(user_id,chat_id,username)
