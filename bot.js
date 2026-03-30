@@ -46,15 +46,52 @@ function menu(){
   ]);
 }
 
-// ---------- START (DEEP LINK) ----------
+// ---------- CALENDAR ----------
+function buildCalendar(offset = 0){
+  const now = new Date();
+  const base = new Date(now.getFullYear(), now.getMonth()+offset, 1);
+
+  const year = base.getFullYear();
+  const month = base.getMonth();
+
+  const lastDay = new Date(year, month+1, 0).getDate();
+
+  const rows = [];
+  let row = [];
+
+  for(let d=1; d<=lastDay; d++){
+    const date = new Date(year, month, d);
+
+    if(date < now) continue;
+
+    row.push({
+      text: d.toString(),
+      callback_data: `pick_${date.toISOString()}`
+    });
+
+    if(row.length === 5){
+      rows.push(row);
+      row = [];
+    }
+  }
+
+  if(row.length) rows.push(row);
+
+  rows.push([
+    {text:'⬅️', callback_data:`cal_${offset-1}`},
+    {text:'➡️', callback_data:`cal_${offset+1}`}
+  ]);
+
+  return rows;
+}
+
+// ---------- START ----------
 bot.start(async ctx=>{
   const param = ctx.message.text.split(' ')[1];
 
   if(param && param.startsWith('join_')){
     const id = param.split('_')[1];
-
     await joinUser(ctx, id);
-
     return ctx.reply('✅ Ти береш участь');
   }
 
@@ -69,10 +106,8 @@ async function checkChannel(username, userId){
     const botMember = await bot.telegram.getChatMember(chat.id, bot.botInfo.id);
     const userMember = await bot.telegram.getChatMember(chat.id, userId);
 
-    const ok = ['administrator','creator'];
-
-    if(!ok.includes(botMember.status)) return {error:'bot'};
-    if(!ok.includes(userMember.status)) return {error:'user'};
+    if(!['administrator','creator'].includes(botMember.status)) return {error:'bot'};
+    if(!['administrator','creator'].includes(userMember.status)) return {error:'user'};
 
     return {chat};
   }catch{
@@ -80,64 +115,11 @@ async function checkChannel(username, userId){
   }
 }
 
-// ---------- CHANNELS ----------
-bot.action('channels', async ctx=>{
-  await ctx.answerCbQuery();
-
-  const ch = await db.query(
-    `SELECT * FROM channels WHERE user_id=$1`,
-    [ctx.from.id]
-  );
-
-  ctx.editMessageText('📢 Канали:',{
-    reply_markup:{
-      inline_keyboard:[
-        ...ch.rows.map(c=>[
-          {text:c.username,callback_data:'noop'},
-          {text:'❌',callback_data:`del_${c.chat_id}`}
-        ]),
-        [{text:'➕ Додати',callback_data:'add'}],
-        [{text:'⬅️ Назад',callback_data:'back'}]
-      ]
-    }
-  });
-});
-
-bot.action('add', async ctx=>{
-  await ctx.answerCbQuery();
-  state.set(ctx.from.id,{step:'add_channel'});
-  ctx.reply('Введи @channel');
-});
-
-bot.action(/del_(.+)/, async ctx=>{
-  await ctx.answerCbQuery();
-
-  await db.query(
-    `DELETE FROM channels WHERE chat_id=$1 AND user_id=$2`,
-    [ctx.match[1], ctx.from.id]
-  );
-
-  ctx.answerCbQuery('❌ Видалено');
-  ctx.editMessageText('Оновлено', menu());
-});
-
-bot.action('back', async ctx=>{
-  await ctx.answerCbQuery();
-  state.clear(ctx.from.id);
-  ctx.editMessageText('🎁 Меню', menu());
-});
-
-bot.action('noop', ctx=>ctx.answerCbQuery());
-
 // ---------- CREATE ----------
 bot.action('create', async ctx=>{
   await ctx.answerCbQuery();
 
-  const ch = await db.query(
-    `SELECT * FROM channels WHERE user_id=$1`,
-    [ctx.from.id]
-  );
-
+  const ch = await db.query(`SELECT * FROM channels WHERE user_id=$1`,[ctx.from.id]);
   if(!ch.rows.length) return ctx.reply('❌ Додай канал');
 
   state.set(ctx.from.id,{
@@ -153,24 +135,6 @@ bot.on('text', async ctx=>{
   const s = state.get(ctx.from.id);
   if(!s) return;
 
-  if(s.step==='add_channel'){
-    const check = await checkChannel(ctx.message.text, ctx.from.id);
-
-    if(check.error === 'not_found') return ctx.reply('❌ Канал не знайдено');
-    if(check.error === 'bot') return ctx.reply('❌ Додай бота в адміни');
-    if(check.error === 'user') return ctx.reply('❌ Ти не адмін');
-
-    await db.query(
-      `INSERT INTO channels(user_id,chat_id,username)
-       VALUES($1,$2,$3)`,
-      [ctx.from.id, check.chat.id, ctx.message.text]
-    );
-
-    ctx.reply('✅ Канал додано');
-    state.clear(ctx.from.id);
-    return;
-  }
-
   if(s.step==='text'){
     s.text = ctx.message.text;
     s.step='winners';
@@ -179,14 +143,11 @@ bot.on('text', async ctx=>{
 
   if(s.step==='winners'){
     s.winners = Number(ctx.message.text);
-    s.step='time';
-    return ctx.reply('Час (хв):');
-  }
-
-  if(s.step==='time'){
-    s.time = Date.now()+Number(ctx.message.text)*60000;
-    s.step='button';
-    return ctx.reply('Текст кнопки:');
+    s.step='calendar';
+    return ctx.reply(
+      '📅 Обери дату:',
+      {reply_markup:{inline_keyboard:buildCalendar()}}
+    );
   }
 
   if(s.step==='button'){
@@ -200,11 +161,64 @@ ${s.text}
 
 🏆 ${s.winners} переможців`,
       Markup.inlineKeyboard([
-        [{text:'✅ Опублікувати',callback_data:'publish'}],
-        [{text:'❌ Скасувати',callback_data:'cancel'}]
+        [{text:'✅ Опублікувати',callback_data:'publish'}]
       ])
     );
   }
+});
+
+// ---------- CALENDAR NAV ----------
+bot.action(/cal_(.+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
+  const offset = Number(ctx.match[1]);
+
+  ctx.editMessageText(
+    '📅 Обери дату:',
+    {reply_markup:{inline_keyboard:buildCalendar(offset)}}
+  );
+});
+
+// ---------- PICK DATE ----------
+bot.action(/pick_(.+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
+  const s = state.get(ctx.from.id);
+
+  s.date = ctx.match[1];
+  s.step = 'time';
+
+  ctx.editMessageText(
+    '⏰ Обери час:',
+    {
+      reply_markup:{
+        inline_keyboard:[
+          [{text:'10:00',callback_data:'t_10'}],
+          [{text:'12:00',callback_data:'t_12'}],
+          [{text:'15:00',callback_data:'t_15'}],
+          [{text:'18:00',callback_data:'t_18'}],
+          [{text:'21:00',callback_data:'t_21'}]
+        ]
+      }
+    }
+  );
+});
+
+// ---------- PICK TIME ----------
+bot.action(/t_(\d+)/, async ctx=>{
+  await ctx.answerCbQuery();
+
+  const s = state.get(ctx.from.id);
+
+  const hour = Number(ctx.match[1]);
+  const d = new Date(s.date);
+
+  d.setHours(hour,0,0);
+
+  s.time = d.getTime();
+  s.step = 'button';
+
+  ctx.editMessageText('🔘 Введи текст кнопки:');
 });
 
 // ---------- PUBLISH ----------
@@ -304,4 +318,4 @@ setInterval(async ()=>{
 },5000);
 
 bot.launch();
-console.log('🔥 PRO V2 READY');
+console.log('🔥 FULL CALENDAR READY');
