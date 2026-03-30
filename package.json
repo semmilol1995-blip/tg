@@ -1,13 +1,13 @@
 {
-  "name": "giveaway-bot",
-  "version": "1.0.0",
+  "name": "giveaway-pro",
+  "version": "2.0.0",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
   },
   "dependencies": {
-    "dotenv": "^16.4.0",
     "telegraf": "^4.16.3",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "dotenv": "^16.4.0"
   }
 }
