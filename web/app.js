@@ -265,15 +265,14 @@ async function create(){
 
   const text = document.getElementById('text').value;
   const winners = document.getElementById('winners').value;
-  const date = document.getElementById('date').value;
-  const time = document.getElementById('time').value;
+  const datetime = document.getElementById('hiddenDateTime').value;
   const button = document.getElementById('button').value;
 
-  if(!text || !winners || !date || !time || !button){
+  if(!text || !winners || !datetime || !button){
     return tg.showAlert('❌ Заповни всі поля');
   }
 
-  const end = new Date(`${date}T${time}`);
+  const end = new Date(datetime);
 
   const formData = new FormData();
 
@@ -308,30 +307,37 @@ async function create(){
   }
 }
 
-// ---------- INIT ----------
-load();
-loadChannels();
+// ---------- CUSTOM DATETIME ----------
+function openPicker(){
+  document.getElementById('hiddenDateTime').showPicker();
+}
 
-// ---------- FIX DATE PLACEHOLDER ----------
-function initDateFix(){
-  ['date','time'].forEach(id=>{
-    const input = document.getElementById(id);
-    const placeholder = document.querySelector(`[data-for="${id}"]`);
+const hiddenInput = document.getElementById('hiddenDateTime');
+const textEl = document.getElementById('datetimeText');
 
-    if(!input || !placeholder) return;
+if(hiddenInput){
+  hiddenInput.addEventListener('change', ()=>{
+    const value = hiddenInput.value;
 
-    const toggle = ()=>{
-      placeholder.classList.toggle('hide', !!input.value);
-    };
+    if(!value) return;
 
-    input.addEventListener('change', toggle);
-    input.addEventListener('input', toggle);
+    const date = new Date(value);
 
-    toggle();
+    const formatted = date.toLocaleString('uk-UA', {
+      day:'2-digit',
+      month:'2-digit',
+      hour:'2-digit',
+      minute:'2-digit'
+    });
+
+    textEl.textContent = formatted;
+    textEl.parentElement.classList.add('active');
   });
 }
 
-initDateFix();
+// ---------- INIT ----------
+load();
+loadChannels();
 
 // ---------- LIVE PREVIEW ----------
 document.getElementById('text')?.addEventListener('input', renderPreview);
