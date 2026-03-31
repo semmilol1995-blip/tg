@@ -5,8 +5,8 @@
 
 body{
   margin:0;
-  font-family: -apple-system, BlinkMacSystemFont, Inter, sans-serif;
-  background: radial-gradient(circle at top, #0f172a, #020617);
+  font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;
+  background:radial-gradient(circle at top,#0f172a,#020617);
   color:#fff;
 }
 
@@ -22,7 +22,6 @@ body{
   margin:0 0 16px;
   font-size:22px;
   font-weight:800;
-  letter-spacing:0.3px;
 }
 
 /* SECTION */
@@ -34,33 +33,31 @@ body{
   margin:12px 0;
   font-size:13px;
   opacity:0.6;
-  letter-spacing:1px;
   text-transform:uppercase;
 }
 
 /* CARD */
 .card{
-  backdrop-filter: blur(14px);
-  background: rgba(15,23,42,0.65);
+  backdrop-filter:blur(14px);
+  background:rgba(15,23,42,0.65);
   border:1px solid rgba(255,255,255,0.06);
   border-radius:18px;
   padding:14px;
   margin-bottom:12px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-  transition:0.25s;
+  box-shadow:0 8px 30px rgba(0,0,0,0.6);
   position:relative;
   overflow:hidden;
+  transition:.25s;
 }
 
-/* 🔥 FIX OVERLAY (ГОЛОВНЕ) */
 .card::after{
   content:'';
   position:absolute;
   inset:0;
-  background:linear-gradient(120deg, transparent, rgba(255,255,255,0.05), transparent);
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,0.05),transparent);
   opacity:0;
-  transition:0.3s;
-  pointer-events:none; /* 💣 ФІКС */
+  transition:.3s;
+  pointer-events:none;
 }
 
 .card:hover::after{
@@ -68,7 +65,7 @@ body{
 }
 
 .card:hover{
-  transform: translateY(-3px) scale(1.01);
+  transform:translateY(-3px);
 }
 
 /* IMAGE */
@@ -80,27 +77,72 @@ body{
   object-fit:cover;
 }
 
-/* HEADER */
+.thumb-wrap{
+  position:relative;
+}
+
+.giveaway-id{
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:rgba(0,0,0,0.6);
+  padding:6px 10px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+/* HEADER ROW */
 .card-header{
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+/* META (BADGES) */
+.meta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.meta span{
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:500;
+  white-space:nowrap;
+}
+
+.meta .winners{
+  background:rgba(251,191,36,0.15);
+  color:#fbbf24;
+}
+
+.meta .participants{
+  background:rgba(139,92,246,0.15);
+  color:#8b5cf6;
 }
 
 /* STATUS */
 .status{
-  font-size:11px;
-  padding:4px 10px;
+  display:inline-flex;
+  align-items:center;
+  padding:5px 12px;
   border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+  white-space:nowrap;
 }
 
 .status.active{
-  background:rgba(34,197,94,0.2);
-  color:#22c55e;
+  background:rgba(59,130,246,0.25);
+  color:#3b82f6;
 }
 
 .status.finished{
-  background:rgba(239,68,68,0.2);
+  background:rgba(239,68,68,0.25);
   color:#ef4444;
 }
 
@@ -109,14 +151,6 @@ body{
   margin-top:8px;
   font-size:14px;
   line-height:1.4;
-  opacity:0.9;
-}
-
-/* FOOTER */
-.card-footer{
-  margin-top:8px;
-  font-size:13px;
-  opacity:0.75;
 }
 
 /* BUTTONS */
@@ -127,38 +161,28 @@ button{
   padding:12px;
   font-weight:600;
   cursor:pointer;
-  transition:0.2s;
   position:relative;
-  z-index:10; /* 🔥 щоб бути поверх */
+  z-index:10;
 }
 
-/* ripple */
 button::after{
   content:'';
   position:absolute;
   inset:0;
   background:rgba(255,255,255,0.08);
   opacity:0;
-  transition:0.2s;
 }
 
 button:active::after{
   opacity:1;
 }
 
-/* MAIN */
 .main-btn{
   background:linear-gradient(135deg,#00ffa6,#00c3ff);
   color:#000;
-  font-weight:700;
   margin-top:12px;
 }
 
-.main-btn:hover{
-  transform:scale(1.04);
-}
-
-/* ACTIONS */
 .reroll{
   margin-top:8px;
   background:rgba(34,197,94,0.15);
@@ -172,8 +196,7 @@ button:active::after{
 }
 
 /* INPUTS */
-textarea,
-input{
+textarea,input{
   width:100%;
   margin-top:8px;
   padding:12px;
@@ -182,29 +205,23 @@ input{
   background:rgba(2,6,23,0.7);
   color:#fff;
   outline:none;
-  transition:0.2s;
 }
 
-textarea{
-  min-height:90px;
-}
+textarea{min-height:90px;}
 
-input:focus,
-textarea:focus{
+input:focus,textarea:focus{
   border:1px solid #00ffa6;
   box-shadow:0 0 0 2px rgba(0,255,166,0.2);
 }
 
-/* ADD CHANNEL */
+/* CHANNEL */
 .add-channel{
   display:flex;
   gap:8px;
   margin-bottom:10px;
 }
 
-.add-channel input{
-  flex:1;
-}
+.add-channel input{flex:1;}
 
 .add-channel button{
   width:auto;
@@ -214,10 +231,9 @@ textarea:focus{
   color:#000;
 }
 
-/* CHANNEL CARD */
 .channel-card{
-  backdrop-filter: blur(12px);
-  background: rgba(15,23,42,0.6);
+  backdrop-filter:blur(12px);
+  background:rgba(15,23,42,0.6);
   border:1px solid rgba(255,255,255,0.05);
   border-radius:16px;
   padding:10px;
@@ -225,42 +241,26 @@ textarea:focus{
   display:flex;
   flex-direction:column;
   gap:6px;
-  transition:0.2s;
 }
 
-.channel-card:hover{
-  transform:scale(1.02);
-}
-
-/* CHANNEL INFO */
 .channel-info{
   display:flex;
   align-items:center;
   gap:10px;
 }
 
-/* AVATAR */
 .avatar{
   width:42px;
   height:42px;
   border-radius:50%;
   object-fit:cover;
-  background:#111;
 }
 
-/* DELETE CHANNEL */
 .delete-channel{
   background:rgba(239,68,68,0.15);
   color:#ef4444;
   padding:8px;
   border-radius:10px;
-}
-
-/* CHECKBOX */
-input[type="checkbox"]{
-  width:18px;
-  height:18px;
-  accent-color:#00ffa6;
 }
 
 /* UPLOAD */
@@ -271,15 +271,9 @@ input[type="checkbox"]{
   text-align:center;
   background:rgba(2,6,23,0.6);
   border:1px dashed rgba(255,255,255,0.1);
-  cursor:pointer;
-  transition:0.2s;
 }
 
-.upload:hover{
-  border-color:#00ffa6;
-}
-
-/* IMAGE PREVIEW */
+/* PREVIEW */
 .preview{
   width:100%;
   margin-top:10px;
@@ -287,57 +281,7 @@ input[type="checkbox"]{
   display:none;
 }
 
-/* TELEGRAM PREVIEW */
-.preview-post{
-  margin-top:12px;
-}
-
-.tg-post{
-  background:#111827;
-  border-radius:14px;
-  padding:10px;
-}
-
-.tg-post img{
-  width:100%;
-  border-radius:10px;
-  margin-bottom:8px;
-}
-
-.tg-text{
-  font-size:14px;
-  margin-bottom:8px;
-}
-
-.tg-btn{
-  background:#2563eb;
-  padding:8px;
-  border-radius:8px;
-  text-align:center;
-  font-weight:600;
-}
-
-/* SKELETON */
-.skeleton{
-  height:80px;
-  border-radius:12px;
-  background:linear-gradient(90deg,#111 25%,#1f2937 50%,#111 75%);
-  background-size:200% 100%;
-  animation:skeleton 1.2s infinite;
-}
-
-@keyframes skeleton{
-  0%{background-position:200% 0}
-  100%{background-position:-200% 0}
-}
-
-/* SMALL */
-small{
-  opacity:0.6;
-  font-size:12px;
-}
-
-
+/* WINNERS */
 .winner{
   display:flex;
   justify-content:space-between;
@@ -351,163 +295,4 @@ small{
 .winner button{
   width:auto;
   padding:6px 10px;
-}
-/* ========================= */
-/* 🔥 NEW UI ADDITIONS */
-/* ========================= */
-
-/* обгортка для картинки */
-.thumb-wrap{
-  position:relative;
-}
-
-/* номер розіграшу поверх картинки */
-.giveaway-id{
-  position:absolute;
-  top:10px;
-  left:10px;
-  background:rgba(0,0,0,0.6);
-  padding:6px 10px;
-  border-radius:10px;
-  font-size:12px;
-  font-weight:700;
-  backdrop-filter:blur(6px);
-}
-
-/* мета (учасники + місця) */
-.meta{
-  font-size:12px;
-  opacity:0.85;
-  text-align:right;
-  line-height:1.4;
-}
-
-/* 🔵 АКТИВНИЙ — голубий */
-.status.active{
-  background:rgba(59,130,246,0.2) !important;
-  color:#3b82f6 !important;
-}
-
-/* 🔴 ЗАВЕРШЕНО — червоний */
-.status.finished{
-  background:rgba(239,68,68,0.2) !important;
-  color:#ef4444 !important;
-}
-
-/* ===== FIX HEADER LAYOUT ===== */
-
-.card-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-}
-
-/* meta не ламає layout */
-.meta{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start; /* 🔥 ключ */
-  text-align:left;        /* 🔥 ключ */
-  flex-shrink:0;
-}
-
-/* статус завжди справа */
-.status{
-  white-space:nowrap;
-}
-
-/* 🔥 FINAL FIX — В ОДИН РЯД */
-
-.meta{
-  display:flex !important;
-  flex-direction:row !important;   /* 💣 головне */
-  align-items:center !important;
-  gap:8px;
-  flex-wrap:nowrap !important;     /* 💣 щоб не переносило */
-}
-
-/* бейджі */
-.meta span{
-  background:rgba(255,255,255,0.06);
-  padding:5px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:500;
-  white-space:nowrap;
-}
-
-/* кольори */
-.meta .winners{
-  background:rgba(251,191,36,0.15);
-  color:#fbbf24;
-}
-
-.meta .participants{
-  background:rgba(139,92,246,0.15);
-  color:#8b5cf6;
-}
-/* ========================= */
-/* 🔥 FINAL HEADER FIX */
-/* ========================= */
-
-.card-header{
-  display:flex !important;
-  align-items:center !important;
-  justify-content:space-between !important;
-  gap:10px;
-}
-
-/* meta в один ряд */
-.meta{
-  display:flex !important;
-  flex-direction:row !important;
-  align-items:center !important;
-  gap:8px;
-  flex-wrap:nowrap !important;
-}
-
-/* бейджі */
-.meta span{
-  background:rgba(255,255,255,0.06);
-  padding:5px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:500;
-  white-space:nowrap;
-}
-
-/* кольори */
-.meta .winners{
-  background:rgba(251,191,36,0.15);
-  color:#fbbf24;
-}
-
-.meta .participants{
-  background:rgba(139,92,246,0.15);
-  color:#8b5cf6;
-}
-
-/* 🔥 FINAL STATUS FIX */
-
-.status{
-  display:inline-flex !important;
-  align-items:center;
-  padding:5px 12px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:600;
-  white-space:nowrap;
-}
-
-/* 🔵 АКТИВНИЙ */
-.status.active{
-  background:rgba(59,130,246,0.18) !important;
-  color:#3b82f6 !important;
-}
-
-/* 🔴 ЗАВЕРШЕНО */
-.status.finished{
-  background:rgba(239,68,68,0.18) !important;
-  color:#ef4444 !important;
 }
