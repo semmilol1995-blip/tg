@@ -278,3 +278,21 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, ()=>{
   console.log('🌐 WEB READY ON', PORT);
 });
+// ---------- TELEGRAM FILE PROXY ----------
+app.get('/file/:id', async (req,res)=>{
+  try{
+    const file = await bot.telegram.getFile(req.params.id);
+
+    const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
+
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+
+    res.set('Content-Type', 'image/jpeg');
+    res.send(Buffer.from(buffer));
+
+  }catch(e){
+    console.log('FILE ERROR:', e.message);
+    res.status(404).send('not found');
+  }
+});
