@@ -219,7 +219,7 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   res.json({ok:true});
 });
 
-// ---------- REROLL ПО МІСЦЮ ----------
+// ---------- REROLL ----------
 app.post('/reroll', async (req,res)=>{
   const { id, place } = req.body;
 
@@ -272,13 +272,22 @@ app.post('/reroll', async (req,res)=>{
   res.json({ok:true});
 });
 
-// ---------- AUTO RESULTS ----------
+// ---------- AUTO RESULTS (FIXED) ----------
 setInterval(async ()=>{
   const r = await db.query(`SELECT * FROM giveaways WHERE status='active'`);
   const now = Date.now();
 
   for(let g of r.rows){
-    if(now >= g.end_time){
+
+    if(now >= g.end_time && g.status === 'active'){
+
+      // 🔒 LOCK
+      const lock = await db.query(
+        `UPDATE giveaways SET status='processing' WHERE id=$1 AND status='active' RETURNING *`,
+        [g.id]
+      );
+
+      if(!lock.rows.length) continue;
 
       const users = await db.query(
         `SELECT * FROM participants WHERE giveaway_id=$1`,
@@ -307,14 +316,24 @@ setInterval(async ()=>{
         text += `${w.place}. @${w.username}\n`;
       });
 
-      const channels = JSON.parse(g.channels || '[]');
+      const messages = JSON.parse(g.messages || '[]');
 
-      for(let ch of channels){
-        await bot.telegram.sendMessage(ch, text);
+      // 🔥 РЕДАГУЄМО СТАРЕ ПОВІДОМЛЕННЯ
+      for(let m of messages){
+        try{
+          await bot.telegram.editMessageText(
+            m.chat_id,
+            m.message_id,
+            null,
+            text
+          );
+        }catch(e){
+          console.log('EDIT ERROR:', e.message);
+        }
       }
 
       await db.query(
-        `UPDATE giveaways SET status='finished', winners_data=$1 WHERE id=$2`,
+        `UPDATE giveaways SET status='finished', winners_data=$1 WHERE id=$2 AND status='processing'`,
         [JSON.stringify(winners), g.id]
       );
     }
