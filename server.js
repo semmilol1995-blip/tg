@@ -45,9 +45,6 @@ app.use(express.json());
 // ---------- STATIC ----------
 app.use(express.static(path.join(__dirname, 'web')));
 
-// ---------- HEALTH ----------
-app.get('/health',(req,res)=>res.send('OK'));
-
 // ---------- CHANNELS ----------
 app.get('/channels/:user', async (req,res)=>{
   const r = await db.query(
@@ -69,33 +66,34 @@ app.get('/giveaways/:user', async (req,res)=>{
 // ---------- CREATE ----------
 app.post('/create', upload.single('image'), async (req,res)=>{
 
-  const {
-    user_id,
-    text,
-    winners,
-    time,
-    button
-  } = req.body;
+  const { user_id, text, winners, time, button } = req.body;
 
-  // 💣 SAFE CHANNELS PARSE
+  // 💣 FIX CHANNELS
   let channels = [];
 
   try{
-    channels = JSON.parse(req.body.channels || '[]');
+    const raw = req.body.channels;
+
+    if(!raw){
+      channels = [];
+    }
+    else if(raw.startsWith('[')){
+      channels = JSON.parse(raw);
+    }
+    else{
+      channels = [raw];
+    }
+
   }catch(e){
     console.log('CHANNELS PARSE ERROR:', req.body.channels);
     channels = [];
   }
 
-  if(!Array.isArray(channels)){
-    console.log('CHANNELS NOT ARRAY:', channels);
-    channels = [];
-  }
-
-  // 💣 FIX TYPE
+  // 💣 TYPE FIX
   channels = channels.map(ch => Number(ch)).filter(Boolean);
 
   console.log('FINAL CHANNELS:', channels);
+  console.log('FILE:', req.file);
 
   if(!channels.length){
     return res.json({ok:false, error:'NO_CHANNELS'});
@@ -111,8 +109,6 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   const messages = [];
 
   for(let ch of channels){
-    if(!ch) continue;
-
     try{
       console.log('SEND TO:', ch);
 
@@ -192,9 +188,7 @@ app.post('/reroll', async (req,res)=>{
     [id]
   );
 
-  if(!users.rows.length){
-    return res.json({ok:false});
-  }
+  if(!users.rows.length) return res.json({ok:false});
 
   const winner = users.rows[Math.floor(Math.random()*users.rows.length)];
 
@@ -243,17 +237,10 @@ setInterval(async ()=>{
       const channels = JSON.parse(g.channels || '[]');
 
       for(let ch of channels){
-        try{
-          await bot.telegram.sendMessage(ch, text);
-        }catch(e){
-          console.log('RESULT ERROR:', e.message);
-        }
+        await bot.telegram.sendMessage(ch, text);
       }
 
-      await db.query(
-        `UPDATE giveaways SET status='finished' WHERE id=$1`,
-        [g.id]
-      );
+      await db.query(`UPDATE giveaways SET status='finished' WHERE id=$1`,[g.id]);
     }
   }
 }, 10000);
