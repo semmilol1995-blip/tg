@@ -22,21 +22,27 @@ async function load(){
 
     let winnersHTML = '';
 
-    // 🏆 якщо є результати
-    if(g.winners_data && g.status === 'finished'){
-      const winners = JSON.parse(g.winners_data);
+    // 🏆 якщо завершено — показуємо навіть якщо пусто
+    if(g.status === 'finished'){
+      let winners = [];
 
-      winnersHTML = `
-        <div style="margin-top:10px;">
-          <b>🏆 Переможці:</b>
-          ${winners.map(w=>`
-            <div class="winner">
-              ${w.place}. @${w.username}
-              <button onclick="reroll(${g.id},${w.place})">🔄</button>
-            </div>
-          `).join('')}
-        </div>
-      `;
+      try{
+        winners = JSON.parse(g.winners_data || '[]');
+      }catch{}
+
+      if(winners.length){
+        winnersHTML = `
+          <div style="margin-top:10px;">
+            <b>🏆 Переможці:</b>
+            ${winners.map(w=>`
+              <div class="winner">
+                ${w.place}. @${w.username}
+                <button type="button" onclick="reroll(${g.id},${w.place})">🔄</button>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
     }
 
     list.innerHTML += `
@@ -63,17 +69,17 @@ async function load(){
 
         ${winnersHTML}
 
-        <button onclick="openParticipants(${g.id})">
+        <button type="button" onclick="openParticipants(${g.id})">
           👥 Список учасників
         </button>
 
         ${g.status === 'finished' ? '' : `
-          <button class="reroll" onclick="reroll(${g.id},1)">
+          <button type="button" class="reroll" onclick="reroll(${g.id},1)">
             🔄 Рерол (рандом)
           </button>
         `}
 
-        <button class="delete" onclick="deleteGiveaway(${g.id})">
+        <button type="button" class="delete" onclick="deleteGiveaway(${g.id})">
           ❌ Видалити
         </button>
 
@@ -89,24 +95,35 @@ function openParticipants(id){
 }
 
 async function deleteGiveaway(id){
-  await fetch(`${API}/delete`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({id})
-  });
+  try{
+    await fetch(`${API}/delete`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})
+    });
 
-  load();
+    tg.showAlert('❌ Розіграш видалено');
+    load();
+
+  }catch{
+    tg.showAlert('❌ Помилка видалення');
+  }
 }
 
 async function reroll(id, place){
-  await fetch(`${API}/reroll`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({id, place})
-  });
+  try{
+    await fetch(`${API}/reroll`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id, place})
+    });
 
-  tg.showAlert(`🔄 Рерол місця ${place}`);
-  load();
+    tg.showAlert(`🔄 Рерол місця ${place}`);
+    load();
+
+  }catch{
+    tg.showAlert('❌ Помилка реролу');
+  }
 }
 
 // ---------- BACK ----------
