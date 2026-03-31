@@ -29,6 +29,14 @@
 <!-- CHANNELS -->
 <div class="section">
   <h3>📢 Канали</h3>
+
+  <!-- 🔥 ADD CHANNEL -->
+  <div class="add-channel">
+    <input id="channelInput" placeholder="@channel або chat_id">
+    <button onclick="addChannel()">➕</button>
+  </div>
+
+  <!-- CHANNEL LIST -->
   <div id="channels"></div>
 </div>
 
@@ -44,17 +52,17 @@
 
   <input id="button" placeholder="Текст кнопки">
 
-  <!-- 🔥 IMAGE UPLOAD (FIXED) -->
+  <!-- 🔥 IMAGE UPLOAD -->
   <label class="upload">
     📷 Додати картинку
     <input type="file" id="image" name="image" accept="image/*">
   </label>
 
-  <!-- 🔥 PREVIEW -->
+  <!-- 🔥 IMAGE PREVIEW -->
   <img id="preview" class="preview">
 
   <!-- 🔥 TELEGRAM STYLE PREVIEW -->
-  <div id="previewPost"></div>
+  <div id="previewPost" class="preview-post"></div>
 
   <button class="main-btn" onclick="create()">🚀 Створити</button>
 </div>
