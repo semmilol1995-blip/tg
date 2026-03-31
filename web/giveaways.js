@@ -22,6 +22,7 @@ async function load(){
 
     let winnersHTML = '';
 
+    // 🏆 winners
     if(g.status === 'finished'){
       let winners = [];
 
@@ -49,20 +50,26 @@ async function load(){
 
         ${g.image ? `
           <div class="thumb-wrap">
-            <img src="${API}/file/${g.image}" class="giveaway-thumb">
+            <img 
+              src="${API}/file/${g.image}" 
+              class="giveaway-thumb"
+              onerror="this.style.display='none'"
+            >
             <div class="giveaway-id">#${g.id}</div>
           </div>
         ` : ''}
 
         <div class="card-header">
+
           <div class="meta">
-            🏆 ${g.winners}<br>
-            👥 ${g.participants || 0}
+            <div>🏆 ${g.winners}</div>
+            <div>👥 ${g.participants || 0}</div>
           </div>
 
           <span class="status ${g.status}">
             ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
           </span>
+
         </div>
 
         <div class="card-body">
