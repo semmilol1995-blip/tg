@@ -423,32 +423,46 @@ input[type="datetime-local"]{
 
 .add-channel{
   display:flex;
+  align-items:center; /* 🔥 вирівнює по вертикалі */
   gap:8px;
 }
 
 .add-channel input{
   flex:1;
+  height:44px; /* 🔥 однакова висота */
 }
 
-/* кнопка як input */
+/* кнопка */
 .add-btn{
-  width:auto;
-  padding:0 16px;
-  border-radius:14px;
-
-  height:44px; /* 🔥 така ж висота як input */
+  height:44px; /* 🔥 така ж як input */
+  padding:0 18px;
 
   display:flex;
   align-items:center;
   justify-content:center;
 
+  border-radius:14px;
   background:linear-gradient(135deg,#00ffa6,#00c3ff);
   color:#000;
   font-weight:600;
-  white-space:nowrap;
 }
 
-/* hover */
-.add-btn:hover{
-  transform:scale(1.03);
+/* 🔥 DATE INPUT FIX */
+input[type="datetime-local"]{
+  height:44px;
+  padding:0 12px;
+
+  color:#fff;
+  background:rgba(2,6,23,0.7);
+
+  color-scheme:dark; /* 🔥 фікс іконки */
+}
+
+/* іконка */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator{
+  filter:invert(1);
+  opacity:0.7;
+}
+input::placeholder{
+  color:rgba(255,255,255,0.4);
 }
