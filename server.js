@@ -4,6 +4,9 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 
+// 🔥 FIX FETCH (CRITICAL)
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }
@@ -49,34 +52,40 @@ app.use(express.static(path.join(__dirname, 'web')));
 
 // ---------- CHANNELS ----------
 app.get('/channels/:user', async (req,res)=>{
-  const r = await db.query(
-    `SELECT * FROM channels WHERE user_id=$1`,
-    [req.params.user]
-  );
+  try{
+    const r = await db.query(
+      `SELECT * FROM channels WHERE user_id=$1`,
+      [req.params.user]
+    );
 
-  const result = [];
+    const result = [];
 
-  for(let ch of r.rows){
-    try{
-      const info = await bot.telegram.getChat(ch.chat_id);
+    for(let ch of r.rows){
+      try{
+        const info = await bot.telegram.getChat(ch.chat_id);
 
-      let photo = null;
-      if(info.photo){
-        photo = info.photo.big_file_id || info.photo.small_file_id;
+        let photo = null;
+        if(info.photo){
+          photo = info.photo.big_file_id || info.photo.small_file_id;
+        }
+
+        result.push({
+          ...ch,
+          title: info.title,
+          photo
+        });
+
+      }catch{
+        result.push(ch);
       }
-
-      result.push({
-        ...ch,
-        title: info.title,
-        photo
-      });
-
-    }catch{
-      result.push(ch);
     }
-  }
 
-  res.json(result);
+    res.json(result);
+
+  }catch(e){
+    console.log('CHANNELS ERROR:', e.message);
+    res.json([]);
+  }
 });
 
 // ---------- ADD CHANNEL ----------
@@ -135,26 +144,32 @@ app.post('/channels/delete', async (req,res)=>{
 
 // ---------- GIVEAWAYS + COUNT ----------
 app.get('/giveaways/:user', async (req,res)=>{
-  const r = await db.query(
-    `SELECT * FROM giveaways WHERE owner_id=$1 ORDER BY id DESC`,
-    [req.params.user]
-  );
-
-  const result = [];
-
-  for(const g of r.rows){
-    const count = await db.query(
-      `SELECT COUNT(*) FROM participants WHERE giveaway_id=$1`,
-      [g.id]
+  try{
+    const r = await db.query(
+      `SELECT * FROM giveaways WHERE owner_id=$1 ORDER BY id DESC`,
+      [req.params.user]
     );
 
-    result.push({
-      ...g,
-      participants: Number(count.rows[0].count)
-    });
-  }
+    const result = [];
 
-  res.json(result);
+    for(const g of r.rows){
+      const count = await db.query(
+        `SELECT COUNT(*) FROM participants WHERE giveaway_id=$1`,
+        [g.id]
+      );
+
+      result.push({
+        ...g,
+        participants: Number(count.rows[0].count)
+      });
+    }
+
+    res.json(result);
+
+  }catch(e){
+    console.log('GIVEAWAYS ERROR:', e.message);
+    res.json([]);
+  }
 });
 
 // ---------- CREATE ----------
@@ -380,6 +395,10 @@ app.get('/file/:id', async (req,res)=>{
     const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
 
     const response = await fetch(url);
+
+    if(!response.ok){
+      throw new Error('fetch failed');
+    }
 
     const buffer = Buffer.from(await response.arrayBuffer());
 
