@@ -8,6 +8,7 @@ let imageFile = null;
 
 // ---------- IMAGE ----------
 const imageInput = document.getElementById('image');
+
 if(imageInput){
   imageInput.addEventListener('change', e=>{
     const file = e.target.files[0];
@@ -20,9 +21,30 @@ if(imageInput){
       const img = document.getElementById('preview');
       img.src = reader.result;
       img.style.display = 'block';
+
+      renderPreview();
     };
     reader.readAsDataURL(file);
   });
+}
+
+// ---------- TELEGRAM PREVIEW ----------
+function renderPreview(){
+  const text = document.getElementById('text')?.value || '';
+  const button = document.getElementById('button')?.value || 'Взяти участь';
+
+  const preview = document.getElementById('previewPost');
+  if(!preview) return;
+
+  preview.innerHTML = `
+    <div class="tg-post">
+      ${imageFile ? `<img src="${document.getElementById('preview').src}">` : ''}
+
+      <div class="tg-text">${text || 'Тут буде текст розіграшу'}</div>
+
+      <div class="tg-btn">${button}</div>
+    </div>
+  `;
 }
 
 // ---------- LOAD GIVEAWAYS ----------
@@ -41,6 +63,8 @@ async function load(){
   data.forEach(g=>{
     list.innerHTML += `
       <div class="card">
+
+        ${g.image ? `<img src="/uploads/${g.image}" class="giveaway-thumb">` : ''}
 
         <div class="card-header">
           <b>#${g.id}</b>
@@ -80,11 +104,29 @@ async function loadChannels(){
 
   data.forEach(ch=>{
     box.innerHTML += `
-      <div class="card">
+      <div class="channel-card">
+
         <label>
           <input type="checkbox" value="${ch.chat_id}" onchange="toggleChannel(this)">
-          ${ch.username || ch.chat_id}
+
+          <div class="channel-info">
+
+            <img 
+              src="${ch.photo 
+                ? `https://api.telegram.org/file/bot${tg.initDataUnsafe?.bot_token}/${ch.photo}`
+                : 'https://via.placeholder.com/40'}"
+              class="avatar"
+            >
+
+            <div>
+              <div class="channel-title">${ch.title || ch.username || 'Канал'}</div>
+              <div class="channel-username">@${ch.username || ''}</div>
+            </div>
+
+          </div>
+
         </label>
+
       </div>
     `;
   });
@@ -126,7 +168,6 @@ async function create(){
   formData.append('time', new Date(date).getTime());
   formData.append('button', button);
 
-  // 💣 ВАЖЛИВО
   formData.append('channels', JSON.stringify(selectedChannels));
 
   if(imageFile){
@@ -177,3 +218,7 @@ async function reroll(id){
 // ---------- INIT ----------
 load();
 loadChannels();
+
+// ---------- LIVE PREVIEW INPUTS ----------
+document.getElementById('text')?.addEventListener('input', renderPreview);
+document.getElementById('button')?.addEventListener('input', renderPreview);
