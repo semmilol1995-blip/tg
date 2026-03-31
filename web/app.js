@@ -87,7 +87,7 @@ async function load(){
           <div class="card-header">
             <b>#${g.id}</b>
             <span class="status ${g.status}">
-              ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
+              ${g.status === 'active' ? 'Активний' : 'Завершено'}
             </span>
           </div>
 
@@ -115,7 +115,7 @@ async function load(){
   }
 }
 
-// ---------- EVENTS (ФІКС КНОПОК) ----------
+// ---------- EVENTS ----------
 document.addEventListener('click', async (e)=>{
 
   const btn = e.target.closest('[data-id]');
@@ -123,12 +123,10 @@ document.addEventListener('click', async (e)=>{
 
   const id = btn.dataset.id;
 
-  // PARTICIPANTS
   if(btn.classList.contains('btn-participants')){
     window.open(`${API}/participants/${id}`, '_blank');
   }
 
-  // DELETE
   if(btn.classList.contains('btn-delete')){
     await fetch(`${API}/delete`,{
       method:'POST',
@@ -139,7 +137,6 @@ document.addEventListener('click', async (e)=>{
     load();
   }
 
-  // REROLL
   if(btn.classList.contains('btn-reroll')){
     await fetch(`${API}/reroll`,{
       method:'POST',
@@ -195,12 +192,7 @@ async function loadChannels(){
       <div class="channel-username">@${ch.username || ''}</div>
     </div>
 
-    <button 
-      class="delete-channel" 
-      onclick="deleteChannel(${ch.id})"
-    >
-      ✕
-    </button>
+    <button class="delete-channel" onclick="deleteChannel(${ch.id})">✕</button>
 
   </div>
 
@@ -274,18 +266,21 @@ async function create(){
   const text = document.getElementById('text').value;
   const winners = document.getElementById('winners').value;
   const date = document.getElementById('date').value;
+  const time = document.getElementById('time').value;
   const button = document.getElementById('button').value;
 
-  if(!text || !winners || !date || !button){
+  if(!text || !winners || !date || !time || !button){
     return tg.showAlert('❌ Заповни всі поля');
   }
+
+  const end = new Date(`${date}T${time}`);
 
   const formData = new FormData();
 
   formData.append('user_id', user);
   formData.append('text', text);
   formData.append('winners', winners);
-  formData.append('time', new Date(date).getTime());
+  formData.append('time', end.getTime());
   formData.append('button', button);
   formData.append('channels', JSON.stringify(selectedChannels));
 
