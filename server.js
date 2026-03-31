@@ -58,20 +58,20 @@ app.get('/channels/:user', async (req,res)=>{
     try{
       const info = await bot.telegram.getChat(ch.chat_id);
 
-// 🔥 ДОП ФІКС
-let photo = null;
+      let photo = null;
 
-if(info.photo){
-  photo = info.photo.big_file_id || info.photo.small_file_id;
-}
+      if(info.photo){
+        photo = info.photo.big_file_id || info.photo.small_file_id;
+      }
 
-    result.push({
-  ...ch,
-  title: info.title,
-  photo
-});
+      result.push({
+        ...ch,
+        title: info.title,
+        photo
+      });
 
-    }catch{
+    }catch(e){
+      console.log('CHANNEL ERROR:', e.message);
       result.push(ch);
     }
   }
@@ -134,7 +134,10 @@ app.post('/create', upload.single('image'), async (req,res)=>{
           }
         });
 
-        file_id = msg.photo[msg.photo.length - 1].file_id;
+        // ✅ ФІКС: не перезаписуємо file_id
+        if(!file_id && msg.photo && msg.photo.length){
+          file_id = msg.photo[msg.photo.length - 1].file_id;
+        }
 
       }else{
         msg = await bot.telegram.sendMessage(ch, text,{
@@ -275,10 +278,10 @@ setInterval(async ()=>{
   }
 }, 10000);
 
-// ---------- TELEGRAM FILE PROXY (FIXED) ----------
+// ---------- FILE PROXY ----------
 app.get('/file/:id', async (req,res)=>{
   try{
-    const file = await bot.telegram.getFile(req.params.id);
+    const file = await bot.telegram.getFile(String(req.params.id));
 
     const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
 
@@ -288,11 +291,12 @@ app.get('/file/:id', async (req,res)=>{
       throw new Error('Fetch failed');
     }
 
-    const buffer = await response.arrayBuffer();
+    const buffer = Buffer.from(await response.arrayBuffer());
 
     res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
     res.set('Cache-Control', 'public, max-age=31536000');
-    res.send(Buffer.from(buffer));
+
+    res.send(buffer);
 
   }catch(e){
     console.log('FILE ERROR:', e.message);
