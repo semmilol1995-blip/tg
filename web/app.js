@@ -173,31 +173,38 @@ async function loadChannels(){
 
     data.forEach(ch=>{
       box.innerHTML += `
-        <div class="channel-card">
+<div class="channel-card">
 
-          <label>
-            <input type="checkbox" value="${ch.chat_id}" onchange="toggleChannel(this)">
+  <div class="channel-row">
 
-            <div class="channel-info">
+    <input 
+      type="checkbox" 
+      value="${ch.chat_id}" 
+      onchange="toggleChannel(this)"
+    >
 
-              <img 
-                src="${ch.photo 
-                  ? `${API}/file/${ch.photo}`
-                  : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(ch.title || 'TG')}"
-                class="avatar"
-              >
+    <img 
+      src="${ch.photo 
+        ? `${API}/file/${ch.photo}`
+        : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(ch.title || 'TG')}"
+      class="avatar"
+    >
 
-              <div>
-                <div>${ch.title || ch.username || 'Канал'}</div>
-                <small>@${ch.username || ''}</small>
-              </div>
+    <div class="channel-text">
+      <div class="channel-title">${ch.title || ch.username || 'Канал'}</div>
+      <div class="channel-username">@${ch.username || ''}</div>
+    </div>
 
-            </div>
-          </label>
+    <button 
+      class="delete-channel" 
+      onclick="deleteChannel(${ch.id})"
+    >
+      ✕
+    </button>
 
-          <button class="delete-channel" onclick="deleteChannel(${ch.id})">❌</button>
+  </div>
 
-        </div>
+</div>
       `;
     });
 
