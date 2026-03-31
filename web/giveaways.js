@@ -22,7 +22,6 @@ async function load(){
 
     let winnersHTML = '';
 
-    // 🏆 winners
     if(g.status === 'finished'){
       let winners = [];
 
@@ -60,7 +59,6 @@ async function load(){
         ` : ''}
 
         <div class="card-header">
-
           <div class="meta">
             <div>🏆 ${g.winners}</div>
             <div>👥 ${g.participants || 0}</div>
@@ -69,15 +67,10 @@ async function load(){
           <span class="status ${g.status}">
             ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
           </span>
-
         </div>
 
         <div class="card-body">
           ${g.text || 'Без тексту'}
-        </div>
-
-        <div class="card-footer">
-          <b>#${g.id}</b>
         </div>
 
         ${winnersHTML}
