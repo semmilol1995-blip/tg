@@ -113,8 +113,8 @@ async function loadChannels(){
 
             <img 
               src="${ch.photo 
-                ? `/file/${ch.photo}`
-                : 'https://via.placeholder.com/40'}"
+  ? `/file/${ch.photo}`
+  : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(ch.title || 'TG')}"
               class="avatar"
             >
 
