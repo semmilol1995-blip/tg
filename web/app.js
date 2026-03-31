@@ -1,7 +1,11 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const user = tg.initDataUnsafe?.user?.id || 0;
+// 🔥 FIX USER + FALLBACK
+const user = tg.initDataUnsafe?.user?.id || 8703864032;
+
+// 🔥 FIX API (щоб завжди працювало в Telegram)
+const API = window.location.origin;
 
 let selectedChannels = [];
 let imageFile = null;
@@ -47,97 +51,109 @@ function renderPreview(){
 
 // ---------- LOAD GIVEAWAYS ----------
 async function load(){
-  const res = await fetch(`/giveaways/${user}`);
-  const data = await res.json();
+  try{
+    const res = await fetch(`${API}/giveaways/${user}`);
+    const data = await res.json();
 
-  const list = document.getElementById('list');
-  list.innerHTML = '';
+    const list = document.getElementById('list');
+    list.innerHTML = '';
 
-  if(!data.length){
-    list.innerHTML = `<div class="card">Нема розіграшів</div>`;
-    return;
+    if(!data.length){
+      list.innerHTML = `<div class="card">Нема розіграшів</div>`;
+      return;
+    }
+
+    data.forEach(g=>{
+      list.innerHTML += `
+        <div class="card">
+
+          ${g.image ? `<img src="${API}/file/${g.image}" class="giveaway-thumb">` : ''}
+
+          <div class="card-header">
+            <b>#${g.id}</b>
+            <span class="status ${g.status}">
+              ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
+            </span>
+          </div>
+
+          <div class="card-body">
+            ${g.text || 'Без тексту'}
+          </div>
+
+          <div class="card-footer">
+            🏆 ${g.winners}
+            <br>
+            👥 Учасники: ${g.participants || 0}
+          </div>
+
+          <button onclick="participants(${g.id})">👥 Список учасників</button>
+
+          <button class="reroll" onclick="reroll(${g.id})">🔄 Рерол</button>
+          <button class="delete" onclick="del(${g.id})">❌ Видалити</button>
+
+        </div>
+      `;
+    });
+
+  }catch(e){
+    console.log('LOAD ERROR:', e);
+    document.getElementById('list').innerHTML = `<div class="card">❌ Помилка завантаження</div>`;
   }
-
-  data.forEach(g=>{
-    list.innerHTML += `
-      <div class="card">
-
-        ${g.image ? `<img src="/file/${g.image}" class="giveaway-thumb">` : ''}
-
-        <div class="card-header">
-          <b>#${g.id}</b>
-          <span class="status ${g.status}">
-            ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
-          </span>
-        </div>
-
-        <div class="card-body">
-          ${g.text || 'Без тексту'}
-        </div>
-
-        <div class="card-footer">
-          🏆 ${g.winners}
-          <br>
-          👥 Учасники: ${g.participants || 0}
-        </div>
-
-        <button onclick="participants(${g.id})">👥 Список учасників</button>
-
-        <button class="reroll" onclick="reroll(${g.id})">🔄 Рерол</button>
-        <button class="delete" onclick="del(${g.id})">❌ Видалити</button>
-
-      </div>
-    `;
-  });
 }
 
-// ---------- PARTICIPANTS TXT ----------
+// ---------- PARTICIPANTS ----------
 function participants(id){
-  window.open(`/participants/${id}`, '_blank');
+  window.open(`${API}/participants/${id}`, '_blank');
 }
 
 // ---------- LOAD CHANNELS ----------
 async function loadChannels(){
-  const res = await fetch(`/channels/${user}`);
-  const data = await res.json();
+  try{
+    const res = await fetch(`${API}/channels/${user}`);
+    const data = await res.json();
 
-  const box = document.getElementById('channels');
-  box.innerHTML = '';
+    const box = document.getElementById('channels');
+    box.innerHTML = '';
 
-  if(!data.length){
-    box.innerHTML = `<div class="card">Нема каналів</div>`;
-    return;
-  }
+    if(!data.length){
+      box.innerHTML = `<div class="card">Нема каналів</div>`;
+      return;
+    }
 
-  data.forEach(ch=>{
-    box.innerHTML += `
-      <div class="channel-card">
+    data.forEach(ch=>{
+      box.innerHTML += `
+        <div class="channel-card">
 
-        <label>
-          <input type="checkbox" value="${ch.chat_id}" onchange="toggleChannel(this)">
+          <label>
+            <input type="checkbox" value="${ch.chat_id}" onchange="toggleChannel(this)">
 
-          <div class="channel-info">
+            <div class="channel-info">
 
-            <img 
-              src="${ch.photo 
-                ? `/file/${ch.photo}`
-                : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(ch.title || 'TG')}"`
-              class="avatar"
-            >
+              <img 
+                src="${ch.photo 
+                  ? `${API}/file/${ch.photo}`
+                  : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(ch.title || 'TG')}"
+                class="avatar"
+              >
 
-            <div>
-              <div class="channel-title">${ch.title || ch.username || 'Канал'}</div>
-              <div class="channel-username">@${ch.username || ''}</div>
+              <div>
+                <div class="channel-title">${ch.title || ch.username || 'Канал'}</div>
+                <div class="channel-username">@${ch.username || ''}</div>
+              </div>
+
             </div>
+          </label>
 
-          </div>
-        </label>
+          <button class="delete-channel" onclick="deleteChannel(${ch.id})">❌</button>
 
-        <button class="delete-channel" onclick="deleteChannel(${ch.id})">❌</button>
+        </div>
+      `;
+    });
 
-      </div>
-    `;
-  });
+  }catch(e){
+    console.log('CHANNELS ERROR:', e);
+    document.getElementById('channels').innerHTML = `<div class="card">❌ Помилка</div>`;
+  }
 }
 
 // ---------- ADD CHANNEL ----------
@@ -148,7 +164,7 @@ async function addChannel(){
     return tg.showAlert('❌ Введи канал');
   }
 
-  const res = await fetch('/channels/add',{
+  const res = await fetch(`${API}/channels/add`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
@@ -164,21 +180,13 @@ async function addChannel(){
     document.getElementById('channelInput').value = '';
     loadChannels();
   }else{
-    if(data.error === 'not_admin'){
-      tg.showAlert('❌ Додай бота в адміни каналу');
-    }else if(data.error === 'type'){
-      tg.showAlert('❌ Це не канал');
-    }else if(data.error === 'empty'){
-      tg.showAlert('❌ Введи канал');
-    }else{
-      tg.showAlert('❌ Канал не знайдено');
-    }
+    tg.showAlert('❌ Помилка додавання');
   }
 }
 
 // ---------- DELETE CHANNEL ----------
 async function deleteChannel(id){
-  await fetch('/channels/delete',{
+  await fetch(`${API}/channels/delete`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({id})
@@ -229,7 +237,7 @@ async function create(){
   }
 
   try{
-    const res = await fetch('/create',{
+    const res = await fetch(`${API}/create`,{
       method:'POST',
       body:formData
     });
@@ -238,28 +246,19 @@ async function create(){
 
     if(data.ok){
       tg.showAlert('✅ Розіграш створено');
+      load();
     }else{
       tg.showAlert('❌ Помилка створення');
     }
 
-    imageFile = null;
-
-    const preview = document.getElementById('preview');
-    if(preview){
-      preview.style.display = 'none';
-      preview.src = '';
-    }
-
-    load();
-
   }catch(e){
-    tg.showAlert('❌ Помилка створення');
+    tg.showAlert('❌ Помилка');
   }
 }
 
 // ---------- DELETE ----------
 async function del(id){
-  await fetch('/delete',{
+  await fetch(`${API}/delete`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({id})
@@ -270,7 +269,7 @@ async function del(id){
 
 // ---------- REROLL ----------
 async function reroll(id){
-  await fetch('/reroll',{
+  await fetch(`${API}/reroll`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({id})
