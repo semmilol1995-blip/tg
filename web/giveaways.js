@@ -62,7 +62,7 @@ ${g.image ? `
   </div>
 
   <span class="status ${g.status}">
-    ${g.status === 'active' ? '🔵 Активний' : '🔴 Завершено'} 
+   ${g.status === 'active' ? 'Активний' : 'Завершено'}
   </span>
 
 </div>
