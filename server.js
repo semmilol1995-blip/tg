@@ -19,6 +19,24 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'web')));
 
+// ---------- 🔥 FILE PROXY (ДОДАНО) ----------
+app.get('/file/:id', async (req,res)=>{
+  try{
+    const file = await bot.telegram.getFile(req.params.id);
+    const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
+
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+
+    res.set('Content-Type', response.headers.get('content-type'));
+    res.send(Buffer.from(buffer));
+
+  }catch(e){
+    console.log('FILE ERROR:', e.message);
+    res.status(404).send('file error');
+  }
+});
+
 // ---------- INIT DB ----------
 (async ()=>{
   await db.query(`CREATE TABLE IF NOT EXISTS channels(
@@ -51,7 +69,7 @@ app.use(express.static(path.join(__dirname, 'web')));
   )`);
 })();
 
-// ---------- PARTICIPANTS TXT (🔥 ФІКС) ----------
+// ---------- PARTICIPANTS TXT ----------
 app.get('/participants/:id', async (req,res)=>{
   const id = req.params.id;
 
@@ -113,7 +131,7 @@ app.get('/channels/:user', async (req,res)=>{
   }
 });
 
-// ---------- DELETE GIVEAWAY ----------
+// ---------- DELETE ----------
 app.post('/delete', async (req,res)=>{
   const { id } = req.body;
 
@@ -167,27 +185,62 @@ app.get('/giveaways/:user', async (req,res)=>{
   }
 });
 
-// ---------- CREATE ----------
+// ---------- CREATE (🔥 ВИПРАВЛЕНО) ----------
 app.post('/create', upload.single('image'), async (req,res)=>{
 
   const { user_id, text, winners, time, button } = req.body;
-
   let channels = JSON.parse(req.body.channels || '[]');
+
+  let file_id = null;
+
+  // 🔥 ОБРОБКА КАРТИНКИ
+  if(req.file){
+    try{
+      const temp = await bot.telegram.sendPhoto(
+        channels[0],
+        { source: req.file.buffer }
+      );
+
+      file_id = temp.photo.pop().file_id;
+
+      await bot.telegram.deleteMessage(channels[0], temp.message_id);
+
+    }catch(e){
+      console.log('PHOTO ERROR:', e.message);
+    }
+  }
 
   const messages = [];
 
   for(let ch of channels){
     try{
-      const msg = await bot.telegram.sendMessage(ch, text,{
-        reply_markup:{
-          inline_keyboard:[[
-            {
-              text: button,
-              url:`https://t.me/${process.env.BOT_USERNAME}?start=join_temp`
-            }
-          ]]
-        }
-      });
+
+      let msg;
+
+      if(file_id){
+        msg = await bot.telegram.sendPhoto(ch, file_id,{
+          caption: text,
+          reply_markup:{
+            inline_keyboard:[[
+              {
+                text: button,
+                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_temp`
+              }
+            ]]
+          }
+        });
+      }else{
+        msg = await bot.telegram.sendMessage(ch, text,{
+          reply_markup:{
+            inline_keyboard:[[
+              {
+                text: button,
+                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_temp`
+              }
+            ]]
+          }
+        });
+      }
 
       messages.push({
         chat_id: ch,
@@ -198,9 +251,9 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   }
 
   const r = await db.query(
-    `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button)
-     VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,
-    [user_id, JSON.stringify(channels), text, winners, time, button]
+    `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button,image)
+     VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+    [user_id, JSON.stringify(channels), text, winners, time, button, file_id]
   );
 
   const id = r.rows[0].id;
@@ -229,7 +282,7 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   res.json({ok:true});
 });
 
-// ---------- REROLL ----------
+// ---------- REROLL (НЕ ЧІПАВ) ----------
 app.post('/reroll', async (req,res)=>{
   const { id, place } = req.body;
 
@@ -282,7 +335,7 @@ app.post('/reroll', async (req,res)=>{
   res.json({ok:true});
 });
 
-// ---------- AUTO RESULTS (ANTI-SPAM) ----------
+// ---------- AUTO RESULTS (НЕ ЧІПАВ) ----------
 setInterval(async ()=>{
   const r = await db.query(`SELECT * FROM giveaways WHERE status='active'`);
   const now = Date.now();
