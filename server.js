@@ -4,7 +4,7 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 
-// 🔥 FIX FETCH (CRITICAL)
+// FIX FETCH
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 const upload = multer({
@@ -38,7 +38,8 @@ app.use(express.static(path.join(__dirname, 'web')));
     button TEXT,
     image TEXT,
     status TEXT DEFAULT 'active',
-    messages TEXT
+    messages TEXT,
+    winners_data TEXT
   )`);
 
   await db.query(`CREATE TABLE IF NOT EXISTS participants(
@@ -93,7 +94,7 @@ app.post('/channels/add', async (req,res)=>{
   const { user_id, input } = req.body;
 
   if(!input){
-    return res.json({ok:false, error:'empty'});
+    return res.json({ok:false});
   }
 
   try{
@@ -105,15 +106,11 @@ app.post('/channels/add', async (req,res)=>{
       chat = await bot.telegram.getChat(Number(input));
     }
 
-    if(!['channel','supergroup'].includes(chat.type)){
-      return res.json({ok:false, error:'type'});
-    }
-
     const me = await bot.telegram.getMe();
     const member = await bot.telegram.getChatMember(chat.id, me.id);
 
     if(!['administrator','creator'].includes(member.status)){
-      return res.json({ok:false, error:'not_admin'});
+      return res.json({ok:false});
     }
 
     await db.query(
@@ -125,24 +122,12 @@ app.post('/channels/add', async (req,res)=>{
     res.json({ok:true});
 
   }catch(e){
-    console.log('ADD CHANNEL ERROR:', e.message);
-    res.json({ok:false, error:'not_found'});
-  }
-});
-
-// ---------- DELETE CHANNEL ----------
-app.post('/channels/delete', async (req,res)=>{
-  const { id } = req.body;
-
-  try{
-    await db.query(`DELETE FROM channels WHERE id=$1`,[id]);
-    res.json({ok:true});
-  }catch{
+    console.log(e.message);
     res.json({ok:false});
   }
 });
 
-// ---------- GIVEAWAYS + COUNT ----------
+// ---------- GIVEAWAYS ----------
 app.get('/giveaways/:user', async (req,res)=>{
   try{
     const r = await db.query(
@@ -167,7 +152,6 @@ app.get('/giveaways/:user', async (req,res)=>{
     res.json(result);
 
   }catch(e){
-    console.log('GIVEAWAYS ERROR:', e.message);
     res.json([]);
   }
 });
@@ -177,73 +161,30 @@ app.post('/create', upload.single('image'), async (req,res)=>{
 
   const { user_id, text, winners, time, button } = req.body;
 
-  let channels = [];
-
-  try{
-    const raw = req.body.channels;
-
-    if(!raw) channels = [];
-    else if(raw.startsWith('[')) channels = JSON.parse(raw);
-    else channels = [raw];
-
-  }catch{
-    channels = [];
-  }
-
-  channels = channels.map(ch => Number(ch)).filter(Boolean);
-
-  if(!channels.length){
-    return res.json({ok:false});
-  }
+  let channels = JSON.parse(req.body.channels || '[]');
 
   let file_id = null;
   const messages = [];
 
   for(let ch of channels){
     try{
-      let msg;
-
-      if(req.file){
-        msg = await bot.telegram.sendPhoto(ch, {
-          source: req.file.buffer,
-          filename: req.file.originalname || 'image.jpg'
-        },{
-          caption: text,
-          reply_markup:{
-            inline_keyboard:[
-              [{
-                text: button,
-                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_temp`
-              }]
-            ]
-          }
-        });
-
-        if(!file_id && msg.photo?.length){
-          file_id = msg.photo[msg.photo.length - 1].file_id;
+      const msg = await bot.telegram.sendMessage(ch, text,{
+        reply_markup:{
+          inline_keyboard:[[
+            {
+              text: button,
+              url:`https://t.me/${process.env.BOT_USERNAME}?start=join_temp`
+            }
+          ]]
         }
-
-      }else{
-        msg = await bot.telegram.sendMessage(ch, text,{
-          reply_markup:{
-            inline_keyboard:[
-              [{
-                text: button,
-                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_temp`
-              }]
-            ]
-          }
-        });
-      }
+      });
 
       messages.push({
         chat_id: ch,
         message_id: msg.message_id
       });
 
-    }catch(e){
-      console.log('SEND ERROR:', e.message);
-    }
+    }catch{}
   }
 
   const r = await db.query(
@@ -255,21 +196,19 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   const id = r.rows[0].id;
 
   for(let m of messages){
-    try{
-      await bot.telegram.editMessageReplyMarkup(
-        m.chat_id,
-        m.message_id,
-        null,
-        {
-          inline_keyboard:[
-            [{
-              text: button,
-              url:`https://t.me/${process.env.BOT_USERNAME}?start=join_${id}`
-            }]
-          ]
-        }
-      );
-    }catch{}
+    await bot.telegram.editMessageReplyMarkup(
+      m.chat_id,
+      m.message_id,
+      null,
+      {
+        inline_keyboard:[[
+          {
+            text: button,
+            url:`https://t.me/${process.env.BOT_USERNAME}?start=join_${id}`
+          }
+        ]]
+      }
+    );
   }
 
   await db.query(
@@ -280,69 +219,54 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   res.json({ok:true});
 });
 
-// ---------- PARTICIPANTS TXT ----------
-app.get('/participants/:id', async (req,res)=>{
-  const id = req.params.id;
-
-  const users = await db.query(
-    `SELECT username FROM participants WHERE giveaway_id=$1`,
-    [id]
-  );
-
-  if(!users.rows.length){
-    return res.status(404).send('No participants');
-  }
-
-  let text = '';
-
-  users.rows.forEach((u,i)=>{
-    text += `${i+1}. @${u.username}\n`;
-  });
-
-  res.setHeader('Content-Disposition', `attachment; filename="participants_${id}.txt"`);
-  res.setHeader('Content-Type', 'text/plain');
-
-  res.send(text);
-});
-
-// ---------- DELETE ----------
-app.post('/delete', async (req,res)=>{
-  const id = req.body.id;
+// ---------- REROLL ПО МІСЦЮ ----------
+app.post('/reroll', async (req,res)=>{
+  const { id, place } = req.body;
 
   const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
   if(!g.rows.length) return res.json({ok:false});
 
-  const messages = JSON.parse(g.rows[0].messages || '[]');
-
-  for(let m of messages){
-    try{
-      await bot.telegram.deleteMessage(m.chat_id, m.message_id);
-    }catch{}
-  }
-
-  await db.query(`DELETE FROM giveaways WHERE id=$1`,[id]);
-
-  res.json({ok:true});
-});
-
-// ---------- REROLL ----------
-app.post('/reroll', async (req,res)=>{
-  const id = req.body.id;
+  let winners = JSON.parse(g.rows[0].winners_data || '[]');
 
   const users = await db.query(
     `SELECT * FROM participants WHERE giveaway_id=$1`,
     [id]
   );
 
-  if(!users.rows.length) return res.json({ok:false});
+  const used = winners.map(w=>w.user_id);
+  const available = users.rows.filter(u => !used.includes(u.user_id));
 
-  const winner = users.rows[Math.floor(Math.random()*users.rows.length)];
+  if(!available.length) return res.json({ok:false});
 
-  const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
-  const channels = JSON.parse(g.rows[0].channels || '[]');
+  const newWinner = available[Math.floor(Math.random()*available.length)];
 
-  for(let ch of channels){
-    await bot.telegram.sendMessage(ch, `🔄 Новий переможець:\n@${winner.username}`);
+  winners = winners.map(w =>
+    w.place === Number(place)
+      ? { place:Number(place), user_id:newWinner.user_id, username:newWinner.username }
+      : w
+  );
+
+  await db.query(
+    `UPDATE giveaways SET winners_data=$1 WHERE id=$2`,
+    [JSON.stringify(winners), id]
+  );
+
+  const messages = JSON.parse(g.rows[0].messages || '[]');
+
+  let text = '🎉 РЕЗУЛЬТАТИ\n\n';
+  winners.forEach(w=>{
+    text += `${w.place}. @${w.username}\n`;
+  });
+
+  for(let m of messages){
+    try{
+      await bot.telegram.editMessageText(
+        m.chat_id,
+        m.message_id,
+        null,
+        text
+      );
+    }catch{}
   }
 
   res.json({ok:true});
@@ -367,13 +291,20 @@ setInterval(async ()=>{
 
       while(winners.length < g.winners){
         const u = users.rows[Math.floor(Math.random()*users.rows.length)];
-        if(!winners.includes(u)) winners.push(u);
+
+        if(!winners.find(x=>x.user_id === u.user_id)){
+          winners.push({
+            place: winners.length + 1,
+            user_id: u.user_id,
+            username: u.username
+          });
+        }
       }
 
       let text = '🎉 РЕЗУЛЬТАТИ\n\n';
 
-      winners.forEach((w,i)=>{
-        text += `${i+1}. @${w.username}\n`;
+      winners.forEach(w=>{
+        text += `${w.place}. @${w.username}\n`;
       });
 
       const channels = JSON.parse(g.channels || '[]');
@@ -382,36 +313,13 @@ setInterval(async ()=>{
         await bot.telegram.sendMessage(ch, text);
       }
 
-      await db.query(`UPDATE giveaways SET status='finished' WHERE id=$1`,[g.id]);
+      await db.query(
+        `UPDATE giveaways SET status='finished', winners_data=$1 WHERE id=$2`,
+        [JSON.stringify(winners), g.id]
+      );
     }
   }
 }, 10000);
-
-// ---------- FILE PROXY ----------
-app.get('/file/:id', async (req,res)=>{
-  try{
-    const file = await bot.telegram.getFile(String(req.params.id));
-
-    const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
-
-    const response = await fetch(url);
-
-    if(!response.ok){
-      throw new Error('fetch failed');
-    }
-
-    const buffer = Buffer.from(await response.arrayBuffer());
-
-    res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
-    res.set('Cache-Control', 'public, max-age=31536000');
-
-    res.send(buffer);
-
-  }catch(e){
-    console.log('FILE ERROR:', e.message);
-    res.status(404).send('not found');
-  }
-});
 
 // ---------- START ----------
 const PORT = process.env.PORT || 3000;
