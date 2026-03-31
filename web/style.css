@@ -447,3 +447,65 @@ small{
   background:rgba(139,92,246,0.15);
   color:#8b5cf6;
 }
+/* ========================= */
+/* 🔥 FINAL HEADER FIX */
+/* ========================= */
+
+.card-header{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px;
+}
+
+/* meta в один ряд */
+.meta{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  gap:8px;
+  flex-wrap:nowrap !important;
+}
+
+/* бейджі */
+.meta span{
+  background:rgba(255,255,255,0.06);
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:500;
+  white-space:nowrap;
+}
+
+/* кольори */
+.meta .winners{
+  background:rgba(251,191,36,0.15);
+  color:#fbbf24;
+}
+
+.meta .participants{
+  background:rgba(139,92,246,0.15);
+  color:#8b5cf6;
+}
+
+/* 🔥 статус як бейдж */
+.status{
+  display:inline-flex !important;
+  align-items:center;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:500;
+  white-space:nowrap;
+}
+
+/* кольори статусу */
+.status.active{
+  background:rgba(59,130,246,0.2) !important;
+  color:#3b82f6 !important;
+}
+
+.status.finished{
+  background:rgba(239,68,68,0.2) !important;
+  color:#ef4444 !important;
+}
