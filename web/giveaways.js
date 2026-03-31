@@ -49,11 +49,8 @@ async function load(){
 
         ${g.image ? `
           <div class="thumb-wrap">
-            <img 
-              src="${API}/file/${g.image}" 
-              class="giveaway-thumb"
-              onerror="this.style.display='none'"
-            >
+            <!-- 🔥 ПОВЕРНУЛИ ЯК БУЛО -->
+            <img src="${g.image}" class="giveaway-thumb">
             <div class="giveaway-id">#${g.id}</div>
           </div>
         ` : ''}
