@@ -1,11 +1,22 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// 🔥 USER (ПРАВИЛЬНО ДЛЯ ВСІХ КОРИСТУВАЧІВ)
+// 🔥 USER (для всіх юзерів)
 const user = tg.initDataUnsafe?.user?.id;
 
-// 🔥 API (завжди правильний домен)
-const API = window.location.origin;
+// 🔥 AUTO API (production-ready)
+const API = (() => {
+  const origin = window.location.origin;
+
+  if (origin.includes('railway.app')) return origin;
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) return origin;
+
+  // fallback для Telegram WebView
+  return 'https://tg-production-4d2b.up.railway.app';
+})();
+
+console.log('API:', API);
+console.log('USER:', user);
 
 let selectedChannels = [];
 let imageFile = null;
@@ -32,7 +43,7 @@ if(imageInput){
   });
 }
 
-// ---------- TELEGRAM PREVIEW ----------
+// ---------- PREVIEW ----------
 function renderPreview(){
   const text = document.getElementById('text')?.value || '';
   const button = document.getElementById('button')?.value || 'Взяти участь';
@@ -105,8 +116,7 @@ async function load(){
   }
 }
 
-// ---------- GLOBAL FUNCTIONS (ФІКС КНОПОК) ----------
-
+// ---------- GLOBAL BUTTONS ----------
 window.participants = function(id){
   window.open(`${API}/participants/${id}`, '_blank');
 }
@@ -225,7 +235,7 @@ async function deleteChannel(id){
   loadChannels();
 }
 
-// ---------- SELECT CHANNEL ----------
+// ---------- SELECT ----------
 function toggleChannel(el){
   const id = el.value;
 
