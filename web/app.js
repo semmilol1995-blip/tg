@@ -4,8 +4,25 @@ tg.expand();
 const user = tg.initDataUnsafe?.user?.id || 0;
 
 let selectedChannels = [];
+let imageFile = null;
 
-// ---------- LOAD GIVEAWAYS ----------
+// ---------- IMAGE ----------
+document.getElementById('image').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+
+  imageFile = file;
+
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const img = document.getElementById('preview');
+    img.src = reader.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+
+// ---------- LOAD ----------
 async function load(){
   const res = await fetch(`/giveaways/${user}`);
   const data = await res.json();
@@ -16,31 +33,19 @@ async function load(){
   data.forEach(g=>{
     list.innerHTML += `
       <div class="card">
+        <b>#${g.id}</b><br>
+        ${g.text}<br>
+        🏆 ${g.winners}<br>
+        ${g.status}<br>
 
-        <div class="card-header">
-          <b>#${g.id}</b>
-          <span class="status ${g.status}">${g.status}</span>
-        </div>
-
-        <div class="card-body">
-          ${g.text || 'Без тексту'}
-        </div>
-
-        <div class="card-footer">
-          🏆 ${g.winners}
-        </div>
-
-        <div class="actions">
-          <button class="btn reroll" onclick="reroll(${g.id})">🔄 Рерол</button>
-          <button class="btn delete" onclick="del(${g.id})">✖ Видалити</button>
-        </div>
-
+        <button class="reroll" onclick="reroll(${g.id})">🔄 Рерол</button>
+        <button class="delete" onclick="del(${g.id})">❌ Видалити</button>
       </div>
     `;
   });
 }
 
-// ---------- LOAD CHANNELS ----------
+// ---------- CHANNELS ----------
 async function loadChannels(){
   const res = await fetch(`/channels/${user}`);
   const data = await res.json();
@@ -60,9 +65,8 @@ async function loadChannels(){
   });
 }
 
-// ---------- SELECT CHANNEL ----------
 function toggleChannel(el){
-  const id = Number(el.value);
+  const id = el.value;
 
   if(el.checked){
     if(!selectedChannels.includes(id)){
@@ -79,20 +83,26 @@ async function create(){
     return tg.showAlert('❌ Обери канал');
   }
 
+  const formData = new FormData();
+
+  formData.append('user_id', user);
+  formData.append('text', document.getElementById('text').value);
+  formData.append('winners', document.getElementById('winners').value);
+  formData.append('time', new Date(document.getElementById('date').value).getTime());
+  formData.append('button', document.getElementById('button').value);
+
+  formData.append('channels', JSON.stringify(selectedChannels));
+
+  if(imageFile){
+    formData.append('image', imageFile);
+  }
+
   await fetch('/create',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      user_id:user,
-      text:document.getElementById('text').value,
-      winners:Number(document.getElementById('winners').value),
-      time:new Date(document.getElementById('date').value).getTime(),
-      button:document.getElementById('button').value,
-      channels:selectedChannels
-    })
+    body:formData
   });
 
-  tg.showAlert('✅ Розіграш створено');
+  tg.showAlert('✅ Створено');
 
   load();
 }
@@ -116,7 +126,7 @@ async function reroll(id){
     body:JSON.stringify({id})
   });
 
-  tg.showAlert('🔄 Новий переможець обраний');
+  tg.showAlert('🔄 Новий переможець');
 }
 
 // ---------- INIT ----------
