@@ -351,3 +351,8 @@ input:focus,textarea:focus{
 .upload-btn input{
   display:none;
 }
+/* 🔥 FIX DATE ICON */
+
+input[type="datetime-local"]{
+  color-scheme: dark;
+}
