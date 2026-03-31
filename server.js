@@ -51,6 +51,31 @@ app.use(express.static(path.join(__dirname, 'web')));
   )`);
 })();
 
+// ---------- PARTICIPANTS TXT (🔥 ФІКС) ----------
+app.get('/participants/:id', async (req,res)=>{
+  const id = req.params.id;
+
+  const users = await db.query(
+    `SELECT username FROM participants WHERE giveaway_id=$1`,
+    [id]
+  );
+
+  if(!users.rows.length){
+    return res.status(404).send('No participants');
+  }
+
+  let text = '';
+
+  users.rows.forEach((u,i)=>{
+    text += `${i+1}. @${u.username}\n`;
+  });
+
+  res.setHeader('Content-Disposition', `attachment; filename="participants_${id}.txt"`);
+  res.setHeader('Content-Type', 'text/plain');
+
+  res.send(text);
+});
+
 // ---------- CHANNELS ----------
 app.get('/channels/:user', async (req,res)=>{
   try{
@@ -84,45 +109,31 @@ app.get('/channels/:user', async (req,res)=>{
     res.json(result);
 
   }catch(e){
-    console.log('CHANNELS ERROR:', e.message);
     res.json([]);
   }
 });
 
-// ---------- ADD CHANNEL ----------
-app.post('/channels/add', async (req,res)=>{
-  const { user_id, input } = req.body;
-
-  if(!input){
-    return res.json({ok:false});
-  }
+// ---------- DELETE GIVEAWAY ----------
+app.post('/delete', async (req,res)=>{
+  const { id } = req.body;
 
   try{
-    let chat;
+    const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
+    if(!g.rows.length) return res.json({ok:false});
 
-    if(input.startsWith('@')){
-      chat = await bot.telegram.getChat(input);
-    }else{
-      chat = await bot.telegram.getChat(Number(input));
+    const messages = JSON.parse(g.rows[0].messages || '[]');
+
+    for(let m of messages){
+      try{
+        await bot.telegram.deleteMessage(m.chat_id, m.message_id);
+      }catch{}
     }
 
-    const me = await bot.telegram.getMe();
-    const member = await bot.telegram.getChatMember(chat.id, me.id);
-
-    if(!['administrator','creator'].includes(member.status)){
-      return res.json({ok:false});
-    }
-
-    await db.query(
-      `INSERT INTO channels(user_id, chat_id, username)
-       VALUES($1,$2,$3)`,
-      [user_id, chat.id, chat.username || '']
-    );
+    await db.query(`DELETE FROM giveaways WHERE id=$1`,[id]);
 
     res.json({ok:true});
 
   }catch(e){
-    console.log(e.message);
     res.json({ok:false});
   }
 });
@@ -163,7 +174,6 @@ app.post('/create', upload.single('image'), async (req,res)=>{
 
   let channels = JSON.parse(req.body.channels || '[]');
 
-  let file_id = null;
   const messages = [];
 
   for(let ch of channels){
@@ -188,9 +198,9 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   }
 
   const r = await db.query(
-    `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button,image)
-     VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
-    [user_id, JSON.stringify(channels), text, winners, time, button, file_id]
+    `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button)
+     VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,
+    [user_id, JSON.stringify(channels), text, winners, time, button]
   );
 
   const id = r.rows[0].id;
@@ -272,7 +282,7 @@ app.post('/reroll', async (req,res)=>{
   res.json({ok:true});
 });
 
-// ---------- AUTO RESULTS (FIXED) ----------
+// ---------- AUTO RESULTS (ANTI-SPAM) ----------
 setInterval(async ()=>{
   const r = await db.query(`SELECT * FROM giveaways WHERE status='active'`);
   const now = Date.now();
@@ -281,7 +291,6 @@ setInterval(async ()=>{
 
     if(now >= g.end_time && g.status === 'active'){
 
-      // 🔒 LOCK
       const lock = await db.query(
         `UPDATE giveaways SET status='processing' WHERE id=$1 AND status='active' RETURNING *`,
         [g.id]
@@ -318,7 +327,6 @@ setInterval(async ()=>{
 
       const messages = JSON.parse(g.messages || '[]');
 
-      // 🔥 РЕДАГУЄМО СТАРЕ ПОВІДОМЛЕННЯ
       for(let m of messages){
         try{
           await bot.telegram.editMessageText(
@@ -327,9 +335,7 @@ setInterval(async ()=>{
             null,
             text
           );
-        }catch(e){
-          console.log('EDIT ERROR:', e.message);
-        }
+        }catch{}
       }
 
       await db.query(
