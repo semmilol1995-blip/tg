@@ -58,14 +58,15 @@ ${g.image ? `
 
   <div class="meta">
     <span class="winners">🏆 ${g.winners}</span>
-    <span class="participants">👤Учасників: ${g.participants || 0}</span>
+    <span class="participants">👤Учасників: ${g.participants || 0}</span> 
   </div>
 
   <span class="status ${g.status}">
-    ${g.status === 'active' ? 'Активний' : 'Завершено'}
+    ${g.status === 'active' ? '🔵 Активний' : '🔴 Завершено'} 
   </span>
 
 </div>
+
 
         <div class="card-body">
           ${g.text || 'Без тексту'}
