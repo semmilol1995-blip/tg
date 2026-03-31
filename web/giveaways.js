@@ -59,11 +59,12 @@ async function load(){
   <div class="meta">
     🏆 ${g.winners}<br>
     👥 ${g.participants || 0}
-  
-          <span class="status ${g.status}">
-            ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
-          </span>
-        </div>
+  </div>
+
+  <span class="status ${g.status}">
+    ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
+  </span>
+</div>
 
         <div class="card-body">
           ${g.text || 'Без тексту'}
