@@ -336,3 +336,19 @@ small{
   opacity:0.6;
   font-size:12px;
 }
+
+
+.winner{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:6px;
+  padding:8px;
+  background:rgba(255,255,255,0.05);
+  border-radius:10px;
+}
+
+.winner button{
+  width:auto;
+  padding:6px 10px;
+}
