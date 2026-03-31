@@ -39,9 +39,7 @@ function renderPreview(){
   preview.innerHTML = `
     <div class="tg-post">
       ${imageFile ? `<img src="${document.getElementById('preview').src}">` : ''}
-
       <div class="tg-text">${text || 'Тут буде текст розіграшу'}</div>
-
       <div class="tg-btn">${button}</div>
     </div>
   `;
@@ -124,12 +122,60 @@ async function loadChannels(){
             </div>
 
           </div>
-
         </label>
+
+        <button class="delete-channel" onclick="deleteChannel(${ch.id})">❌</button>
 
       </div>
     `;
   });
+}
+
+// ---------- ADD CHANNEL ----------
+async function addChannel(){
+  const input = document.getElementById('channelInput').value.trim();
+
+  if(!input){
+    return tg.showAlert('❌ Введи канал');
+  }
+
+  const res = await fetch('/channels/add',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      user_id:user,
+      input
+    })
+  });
+
+  const data = await res.json();
+
+  if(data.ok){
+    tg.showAlert('✅ Канал додано');
+    document.getElementById('channelInput').value = '';
+    loadChannels();
+  }else{
+    if(data.error === 'not_admin'){
+      tg.showAlert('❌ Додай бота в адміни каналу');
+    }else if(data.error === 'type'){
+      tg.showAlert('❌ Це не канал');
+    }else if(data.error === 'empty'){
+      tg.showAlert('❌ Введи канал');
+    }else{
+      tg.showAlert('❌ Канал не знайдено');
+    }
+  }
+}
+
+// ---------- DELETE CHANNEL ----------
+async function deleteChannel(id){
+  await fetch('/channels/delete',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id})
+  });
+
+  loadChannels();
 }
 
 // ---------- SELECT CHANNEL ----------
@@ -169,7 +215,6 @@ async function create(){
   formData.append('button', button);
   formData.append('channels', JSON.stringify(selectedChannels));
 
-  // 🔥 КРИТИЧНИЙ ФІКС (саме тут була проблема)
   if(imageFile){
     formData.append('image', imageFile, imageFile.name);
   }
@@ -188,7 +233,6 @@ async function create(){
       tg.showAlert('❌ Помилка створення');
     }
 
-    // reset
     imageFile = null;
 
     const preview = document.getElementById('preview');
@@ -197,7 +241,6 @@ async function create(){
       preview.src = '';
     }
 
-    // reload
     load();
 
   }catch(e){
