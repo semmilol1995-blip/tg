@@ -4,8 +4,10 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 
-
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 const db = require('./db');
 const bot = require('./bot');
@@ -59,7 +61,6 @@ app.get('/channels/:user', async (req,res)=>{
       const info = await bot.telegram.getChat(ch.chat_id);
 
       let photo = null;
-
       if(info.photo){
         photo = info.photo.big_file_id || info.photo.small_file_id;
       }
@@ -71,12 +72,65 @@ app.get('/channels/:user', async (req,res)=>{
       });
 
     }catch(e){
-      console.log('CHANNEL ERROR:', e.message);
       result.push(ch);
     }
   }
 
   res.json(result);
+});
+
+// ---------- ADD CHANNEL ----------
+app.post('/channels/add', async (req,res)=>{
+  const { user_id, input } = req.body;
+
+  if(!input){
+    return res.json({ok:false, error:'empty'});
+  }
+
+  try{
+    let chat;
+
+    if(input.startsWith('@')){
+      chat = await bot.telegram.getChat(input);
+    }else{
+      chat = await bot.telegram.getChat(Number(input));
+    }
+
+    if(!['channel','supergroup'].includes(chat.type)){
+      return res.json({ok:false, error:'type'});
+    }
+
+    const me = await bot.telegram.getMe();
+    const member = await bot.telegram.getChatMember(chat.id, me.id);
+
+    if(!['administrator','creator'].includes(member.status)){
+      return res.json({ok:false, error:'not_admin'});
+    }
+
+    await db.query(
+      `INSERT INTO channels(user_id, chat_id, username)
+       VALUES($1,$2,$3)`,
+      [user_id, chat.id, chat.username || '']
+    );
+
+    res.json({ok:true});
+
+  }catch(e){
+    console.log('ADD CHANNEL ERROR:', e.message);
+    res.json({ok:false, error:'not_found'});
+  }
+});
+
+// ---------- DELETE CHANNEL ----------
+app.post('/channels/delete', async (req,res)=>{
+  const { id } = req.body;
+
+  try{
+    await db.query(`DELETE FROM channels WHERE id=$1`,[id]);
+    res.json({ok:true});
+  }catch{
+    res.json({ok:false});
+  }
 });
 
 // ---------- GIVEAWAYS ----------
@@ -121,7 +175,8 @@ app.post('/create', upload.single('image'), async (req,res)=>{
 
       if(req.file){
         msg = await bot.telegram.sendPhoto(ch, {
-          source: req.file.buffer
+          source: req.file.buffer,
+          filename: req.file.originalname || 'image.jpg'
         },{
           caption: text,
           reply_markup:{
@@ -134,8 +189,7 @@ app.post('/create', upload.single('image'), async (req,res)=>{
           }
         });
 
-        // ✅ ФІКС: не перезаписуємо file_id
-        if(!file_id && msg.photo && msg.photo.length){
+        if(!file_id && msg.photo?.length){
           file_id = msg.photo[msg.photo.length - 1].file_id;
         }
 
