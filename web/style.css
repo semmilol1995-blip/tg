@@ -323,3 +323,31 @@ input:focus,textarea:focus{
   background:rgba(239,68,68,0.25) !important;
   color:#ef4444 !important;
 }
+/* 🔥 CUSTOM FILE BUTTON */
+
+.upload-btn{
+  display:block;
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  border-radius:14px;
+
+  background:rgba(255,255,255,0.06);
+  border:1px dashed rgba(255,255,255,0.15);
+
+  text-align:center;
+  cursor:pointer;
+  font-weight:600;
+
+  transition:0.2s;
+}
+
+.upload-btn:hover{
+  border-color:#00ffa6;
+  background:rgba(0,255,166,0.08);
+}
+
+/* 🔥 ховаємо дефолт input */
+.upload-btn input{
+  display:none;
+}
