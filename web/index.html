@@ -50,17 +50,13 @@
 
     <input id="winners" type="number" placeholder="Кількість переможців">
 
-<div class="date-row">
+<div class="custom-datetime">
 
-  <div class="input-wrap">
-    <input id="date" type="date">
-    <span class="fake-placeholder" data-for="date">Оберіть дату</span>
+  <div class="fake-input" onclick="openPicker()">
+    <span id="datetimeText">Оберіть дату і час</span>
   </div>
 
-  <div class="input-wrap">
-    <input id="time" type="time">
-    <span class="fake-placeholder" data-for="time">Оберіть час</span>
-  </div>
+  <input type="datetime-local" id="hiddenDateTime">
 
 </div>
 
