@@ -356,30 +356,66 @@ input:focus,textarea:focus{
 input[type="datetime-local"]{
   color-scheme: dark;
 }
+/* ========================= */
+/* 🔥 COMPACT CHANNEL UI */
+/* ========================= */
+
+.channel-card{
+  padding:8px 10px;
+  border-radius:14px;
+}
+
+/* ряд */
 .channel-row{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:8px;
 }
 
+/* чекбокс */
+.channel-row input{
+  width:16px;
+  height:16px;
+  margin:0;
+}
+
+/* аватар */
+.avatar{
+  width:36px;
+  height:36px;
+}
+
+/* текст */
 .channel-text{
   flex:1;
   display:flex;
   flex-direction:column;
+  gap:2px;
 }
 
+/* назва */
 .channel-title{
-  font-size:14px;
+  font-size:13px;
   font-weight:600;
+  line-height:1.2;
 }
 
+/* юзер */
 .channel-username{
-  font-size:12px;
+  font-size:11px;
   opacity:0.6;
+  line-height:1;
 }
 
+/* delete */
 .delete-channel{
-  width:auto;
-  padding:6px 10px;
-  border-radius:10px;
+  width:28px;
+  height:28px;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:8px;
+  font-size:14px;
 }
