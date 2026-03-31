@@ -64,7 +64,7 @@ async function load(){
     list.innerHTML += `
       <div class="card">
 
-        ${g.image ? `<img src="/uploads/${g.image}" class="giveaway-thumb">` : ''}
+        ${g.image ? `<img src="/file/${g.image}" class="giveaway-thumb">` : ''}
 
         <div class="card-header">
           <b>#${g.id}</b>
@@ -113,7 +113,7 @@ async function loadChannels(){
 
             <img 
               src="${ch.photo 
-                ? `https://api.telegram.org/file/bot${tg.initDataUnsafe?.bot_token}/${ch.photo}`
+                ? `/file/${ch.photo}`
                 : 'https://via.placeholder.com/40'}"
               class="avatar"
             >
@@ -219,6 +219,6 @@ async function reroll(id){
 load();
 loadChannels();
 
-// ---------- LIVE PREVIEW INPUTS ----------
+// ---------- LIVE PREVIEW ----------
 document.getElementById('text')?.addEventListener('input', renderPreview);
 document.getElementById('button')?.addEventListener('input', renderPreview);
