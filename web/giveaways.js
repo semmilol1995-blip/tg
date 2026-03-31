@@ -54,11 +54,10 @@ ${g.image ? `
   </div>
 ` : ''}
 
-        <div class="card-header">
-          <div class="meta">
-            <div>🏆 ${g.winners}</div>
-            <div>👥 ${g.participants || 0}</div>
-          </div>
+<div class="meta">
+  <span class="winners">🏆 ${g.winners}</span>
+  <span class="participants">👤Учасників: ${g.participants || 0}</span>
+</div>
 
           <span class="status ${g.status}">
             ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
