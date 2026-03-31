@@ -77,7 +77,11 @@ async function load(){
 
         <div class="card-footer">
           🏆 ${g.winners}
+          <br>
+          👥 Учасники: ${g.participants || 0}
         </div>
+
+        <button onclick="participants(${g.id})">👥 Список учасників</button>
 
         <button class="reroll" onclick="reroll(${g.id})">🔄 Рерол</button>
         <button class="delete" onclick="del(${g.id})">❌ Видалити</button>
@@ -85,6 +89,11 @@ async function load(){
       </div>
     `;
   });
+}
+
+// ---------- PARTICIPANTS TXT ----------
+function participants(id){
+  window.open(`/participants/${id}`, '_blank');
 }
 
 // ---------- LOAD CHANNELS ----------
@@ -112,7 +121,7 @@ async function loadChannels(){
             <img 
               src="${ch.photo 
                 ? `/file/${ch.photo}`
-                : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(ch.title || 'TG')}"
+                : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(ch.title || 'TG')}"`
               class="avatar"
             >
 
