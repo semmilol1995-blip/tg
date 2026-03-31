@@ -4,68 +4,70 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Telegram WebApp -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <link rel="stylesheet" href="style.css">
 
-<title>Giveaway Panel</title>
+<title>🎁 Giveaway Panel</title>
 </head>
 
 <body>
 
 <div class="app">
 
-<!-- HEADER -->
-<div class="header">
-  <h2>🎁 Giveaway Panel</h2>
-</div>
-
-<!-- GIVEAWAYS LIST -->
-<div class="section">
-  <h3>📊 Розіграші</h3>
-  <div id="list">Завантаження...</div>
-</div>
-
-<!-- CHANNELS -->
-<div class="section">
-  <h3>📢 Канали</h3>
-
-  <!-- 🔥 ADD CHANNEL -->
-  <div class="add-channel">
-    <input id="channelInput" placeholder="@channel або chat_id">
-    <button onclick="addChannel()">➕</button>
+  <!-- HEADER -->
+  <div class="header">
+    <h2>🎁 Giveaway Panel</h2>
   </div>
 
-  <!-- CHANNEL LIST -->
-  <div id="channels"></div>
-</div>
+  <!-- GIVEAWAYS -->
+  <div class="section">
+    <h3>📊 РОЗІГРАШІ</h3>
+    <div id="list">Завантаження...</div>
+  </div>
 
-<!-- CREATE -->
-<div class="section create">
-  <h3>🚀 Створити розіграш</h3>
+  <!-- CHANNELS -->
+  <div class="section">
+    <h3>📢 КАНАЛИ</h3>
 
-  <textarea id="text" placeholder="Текст розіграшу"></textarea>
+    <!-- ADD CHANNEL -->
+    <div class="add-channel">
+      <input id="channelInput" placeholder="@channel або chat_id">
+      <button onclick="addChannel()">+</button>
+    </div>
 
-  <input id="winners" type="number" placeholder="Кількість переможців">
+    <!-- CHANNEL LIST -->
+    <div id="channels"></div>
+  </div>
 
-  <input id="date" type="datetime-local">
+  <!-- CREATE -->
+  <div class="section create">
+    <h3>🚀 СТВОРИТИ РОЗІГРАШ</h3>
 
-  <input id="button" placeholder="Текст кнопки">
+    <textarea id="text" placeholder="Текст розіграшу"></textarea>
 
-  <!-- 🔥 IMAGE UPLOAD -->
-  <label class="upload">
-    📷 Додати картинку
-    <input type="file" id="image" name="image" accept="image/*">
-  </label>
+    <input id="winners" type="number" placeholder="Кількість переможців">
 
-  <!-- 🔥 IMAGE PREVIEW -->
-  <img id="preview" class="preview">
+    <input id="date" type="datetime-local">
 
-  <!-- 🔥 TELEGRAM STYLE PREVIEW -->
-  <div id="previewPost" class="preview-post"></div>
+    <input id="button" placeholder="Текст кнопки">
 
-  <button class="main-btn" onclick="create()">🚀 Створити</button>
-</div>
+    <!-- IMAGE -->
+    <label class="upload">
+      📷 Додати картинку
+      <input type="file" id="image" name="image" accept="image/*">
+    </label>
+
+    <!-- PREVIEW IMAGE -->
+    <img id="preview" class="preview">
+
+    <!-- TELEGRAM PREVIEW -->
+    <div id="previewPost" class="preview-post"></div>
+
+    <!-- CREATE BUTTON -->
+    <button class="main-btn" onclick="create()">🚀 Створити</button>
+  </div>
 
 </div>
 
