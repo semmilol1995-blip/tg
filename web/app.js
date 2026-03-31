@@ -115,19 +115,21 @@ async function load(){
   }
 }
 
-// ---------- EVENTS (КНОПКИ) ----------
+// ---------- EVENTS (ФІКС КНОПОК) ----------
 document.addEventListener('click', async (e)=>{
 
-  const id = e.target.dataset.id;
-  if(!id) return;
+  const btn = e.target.closest('[data-id]');
+  if(!btn) return;
 
-  // participants
-  if(e.target.classList.contains('btn-participants')){
+  const id = btn.dataset.id;
+
+  // PARTICIPANTS
+  if(btn.classList.contains('btn-participants')){
     window.open(`${API}/participants/${id}`, '_blank');
   }
 
-  // delete
-  if(e.target.classList.contains('btn-delete')){
+  // DELETE
+  if(btn.classList.contains('btn-delete')){
     await fetch(`${API}/delete`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -137,8 +139,8 @@ document.addEventListener('click', async (e)=>{
     load();
   }
 
-  // reroll
-  if(e.target.classList.contains('btn-reroll')){
+  // REROLL
+  if(btn.classList.contains('btn-reroll')){
     await fetch(`${API}/reroll`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
