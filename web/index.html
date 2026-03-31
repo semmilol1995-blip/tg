@@ -44,14 +44,17 @@
 
   <input id="button" placeholder="Текст кнопки">
 
-  <!-- 🔥 IMAGE UPLOAD -->
+  <!-- 🔥 IMAGE UPLOAD (FIXED) -->
   <label class="upload">
     📷 Додати картинку
-    <input type="file" id="image" accept="image/*">
+    <input type="file" id="image" name="image" accept="image/*">
   </label>
 
   <!-- 🔥 PREVIEW -->
   <img id="preview" class="preview">
+
+  <!-- 🔥 TELEGRAM STYLE PREVIEW -->
+  <div id="previewPost"></div>
 
   <button class="main-btn" onclick="create()">🚀 Створити</button>
 </div>
