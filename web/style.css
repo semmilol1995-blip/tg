@@ -398,7 +398,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   flex:1;
 }
 
-/* placeholder текст */
 .fake-placeholder{
   position:absolute;
   left:12px;
@@ -408,6 +407,11 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   color:rgba(255,255,255,0.5);
   pointer-events:none;
   transition:.2s;
+}
+
+/* коли сховано */
+.fake-placeholder.hide{
+  opacity:0;
 }
 
 /* input */
