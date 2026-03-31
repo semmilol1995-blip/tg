@@ -416,3 +416,31 @@ small{
 .status{
   white-space:nowrap;
 }
+
+/* контейнер */
+.meta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+/* 🔥 бейдж */
+.meta span{
+  background:rgba(255,255,255,0.06);
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:500;
+}
+
+/* окремо кольори */
+.meta .winners{
+  background:rgba(251,191,36,0.15);
+  color:#fbbf24;
+}
+
+.meta .participants{
+  background:rgba(139,92,246,0.15);
+  color:#8b5cf6;
+}
