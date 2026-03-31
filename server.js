@@ -61,7 +61,7 @@ app.get('/channels/:user', async (req,res)=>{
       result.push({
         ...ch,
         title: info.title,
-        photo: info.photo?.small_file_id || null
+        photo: info.photo?.big_file_id || info.photo?.small_file_id || null
       });
 
     }catch{
@@ -283,7 +283,8 @@ app.get('/file/:id', async (req,res)=>{
 
     const buffer = await response.arrayBuffer();
 
-    res.set('Content-Type', response.headers.get('content-type'));
+    res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=31536000');
     res.send(Buffer.from(buffer));
 
   }catch(e){
