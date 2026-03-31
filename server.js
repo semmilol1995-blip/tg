@@ -12,6 +12,9 @@ const bot = require('./bot');
 const app = express();
 app.use(express.json());
 
+// 🔥 ДОДАНО — щоб віддавати картинки
+app.use('/uploads', express.static('uploads'));
+
 // ---------- INIT DB ----------
 (async ()=>{
   await db.query(`CREATE TABLE IF NOT EXISTS channels(
@@ -29,6 +32,7 @@ app.use(express.json());
     winners INT,
     end_time BIGINT,
     button TEXT,
+    image TEXT, -- 🔥 ДОДАНО
     status TEXT DEFAULT 'active',
     messages TEXT
   )`);
@@ -45,13 +49,31 @@ app.use(express.json());
 // ---------- STATIC ----------
 app.use(express.static(path.join(__dirname, 'web')));
 
-// ---------- CHANNELS ----------
+// ---------- CHANNELS (🔥 АВАТАР + TITLE) ----------
 app.get('/channels/:user', async (req,res)=>{
   const r = await db.query(
     `SELECT * FROM channels WHERE user_id=$1`,
     [req.params.user]
   );
-  res.json(r.rows);
+
+  const result = [];
+
+  for(let ch of r.rows){
+    try{
+      const info = await bot.telegram.getChat(ch.chat_id);
+
+      result.push({
+        ...ch,
+        title: info.title,
+        photo: info.photo?.small_file_id || null
+      });
+
+    }catch{
+      result.push(ch);
+    }
+  }
+
+  res.json(result);
 });
 
 // ---------- GIVEAWAYS ----------
@@ -89,7 +111,6 @@ app.post('/create', upload.single('image'), async (req,res)=>{
     channels = [];
   }
 
-  // 💣 TYPE FIX
   channels = channels.map(ch => Number(ch)).filter(Boolean);
 
   console.log('FINAL CHANNELS:', channels);
@@ -99,10 +120,13 @@ app.post('/create', upload.single('image'), async (req,res)=>{
     return res.json({ok:false, error:'NO_CHANNELS'});
   }
 
+  // 🔥 ДОДАНО
+  const image = req.file ? req.file.filename : null;
+
   const r = await db.query(
-    `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button)
-     VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,
-    [user_id, JSON.stringify(channels), text, winners, time, button]
+    `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button,image)
+     VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+    [user_id, JSON.stringify(channels), text, winners, time, button, image]
   );
 
   const id = r.rows[0].id;
