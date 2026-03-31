@@ -2,6 +2,10 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
+const multer = require('multer');
+
+const upload = multer({ dest: 'uploads/' });
+
 const db = require('./db');
 const bot = require('./bot');
 
@@ -62,9 +66,18 @@ app.get('/giveaways/:user', async (req,res)=>{
   res.json(r.rows);
 });
 
-// ---------- CREATE + POST ----------
-app.post('/create', async (req,res)=>{
-  const { user_id, text, winners, time, button, channels } = req.body;
+// ---------- CREATE (PHOTO SUPPORT) ----------
+app.post('/create', upload.single('image'), async (req,res)=>{
+
+  const {
+    user_id,
+    text,
+    winners,
+    time,
+    button
+  } = req.body;
+
+  const channels = JSON.parse(req.body.channels || '[]');
 
   const r = await db.query(
     `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button)
@@ -77,16 +90,36 @@ app.post('/create', async (req,res)=>{
 
   for(let ch of channels){
     try{
-      const msg = await bot.telegram.sendMessage(ch, text, {
-        reply_markup:{
-          inline_keyboard:[
-            [{
-              text: button,
-              url:`https://t.me/${process.env.BOT_USERNAME}?start=join_${id}`
-            }]
-          ]
-        }
-      });
+
+      let msg;
+
+      // 🔥 якщо є фото
+      if(req.file){
+        msg = await bot.telegram.sendPhoto(ch, {
+          source: req.file.path
+        },{
+          caption: text,
+          reply_markup:{
+            inline_keyboard:[
+              [{
+                text: button,
+                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_${id}`
+              }]
+            ]
+          }
+        });
+      }else{
+        msg = await bot.telegram.sendMessage(ch, text,{
+          reply_markup:{
+            inline_keyboard:[
+              [{
+                text: button,
+                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_${id}`
+              }]
+            ]
+          }
+        });
+      }
 
       messages.push({
         chat_id: ch,
@@ -94,7 +127,7 @@ app.post('/create', async (req,res)=>{
       });
 
     }catch(e){
-      console.log(e.message);
+      console.log('SEND ERROR:', e.message);
     }
   }
 
@@ -103,7 +136,7 @@ app.post('/create', async (req,res)=>{
     [JSON.stringify(messages), id]
   );
 
-  res.json({id});
+  res.json({ok:true});
 });
 
 // ---------- DELETE ----------
@@ -126,12 +159,32 @@ app.post('/delete', async (req,res)=>{
   res.json({ok:true});
 });
 
-const PORT = process.env.PORT || 3000;
+// ---------- REROLL ----------
+app.post('/reroll', async (req,res)=>{
+  const id = req.body.id;
 
-app.listen(PORT, ()=>{
-  console.log('🌐 WEB READY ON', PORT);
+  const users = await db.query(
+    `SELECT * FROM participants WHERE giveaway_id=$1`,
+    [id]
+  );
+
+  if(!users.rows.length){
+    return res.json({ok:false});
+  }
+
+  const winner = users.rows[Math.floor(Math.random()*users.rows.length)];
+
+  const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
+  const channels = JSON.parse(g.rows[0].channels);
+
+  for(let ch of channels){
+    await bot.telegram.sendMessage(ch, `🔄 Новий переможець:\n@${winner.username}`);
+  }
+
+  res.json({ok:true});
 });
-// ---------- AUTO FINISH ----------
+
+// ---------- AUTO RESULTS ----------
 setInterval(async ()=>{
   const r = await db.query(`SELECT * FROM giveaways WHERE status='active'`);
   const now = Date.now();
@@ -173,28 +226,9 @@ setInterval(async ()=>{
   }
 }, 10000);
 
-app.post('/reroll', async (req,res)=>{
-  const id = req.body.id;
+// ---------- START ----------
+const PORT = process.env.PORT || 3000;
 
-  const users = await db.query(
-    `SELECT * FROM participants WHERE giveaway_id=$1`,
-    [id]
-  );
-
-  if(!users.rows.length){
-    return res.json({ok:false});
-  }
-
-  const winner = users.rows[Math.floor(Math.random()*users.rows.length)];
-
-  const text = `🔄 НОВИЙ ПЕРЕМОЖЕЦЬ\n\n@${winner.username}`;
-
-  const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
-  const channels = JSON.parse(g.rows[0].channels);
-
-  for(let ch of channels){
-    await bot.telegram.sendMessage(ch, text);
-  }
-
-  res.json({ok:true});
+app.listen(PORT, ()=>{
+  console.log('🌐 WEB READY ON', PORT);
 });
