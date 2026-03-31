@@ -1,10 +1,10 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// 🔥 FIX USER + FALLBACK
-const user = tg.initDataUnsafe?.user?.id || 8703864032;
+// 🔥 USER (ПРАВИЛЬНО ДЛЯ ВСІХ КОРИСТУВАЧІВ)
+const user = tg.initDataUnsafe?.user?.id;
 
-// 🔥 FIX API (щоб завжди працювало в Telegram)
+// 🔥 API (завжди правильний домен)
 const API = window.location.origin;
 
 let selectedChannels = [];
@@ -51,6 +51,11 @@ function renderPreview(){
 
 // ---------- LOAD GIVEAWAYS ----------
 async function load(){
+  if(!user){
+    document.getElementById('list').innerHTML = `<div class="card">❌ Нема user_id</div>`;
+    return;
+  }
+
   try{
     const res = await fetch(`${API}/giveaways/${user}`);
     const data = await res.json();
@@ -87,7 +92,6 @@ async function load(){
           </div>
 
           <button onclick="participants(${g.id})">👥 Список учасників</button>
-
           <button class="reroll" onclick="reroll(${g.id})">🔄 Рерол</button>
           <button class="delete" onclick="del(${g.id})">❌ Видалити</button>
 
@@ -101,13 +105,39 @@ async function load(){
   }
 }
 
-// ---------- PARTICIPANTS ----------
-function participants(id){
+// ---------- GLOBAL FUNCTIONS (ФІКС КНОПОК) ----------
+
+window.participants = function(id){
   window.open(`${API}/participants/${id}`, '_blank');
+}
+
+window.del = async function(id){
+  await fetch(`${API}/delete`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id})
+  });
+
+  load();
+}
+
+window.reroll = async function(id){
+  await fetch(`${API}/reroll`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id})
+  });
+
+  tg.showAlert('🔄 Новий переможець');
 }
 
 // ---------- LOAD CHANNELS ----------
 async function loadChannels(){
+  if(!user){
+    document.getElementById('channels').innerHTML = `<div class="card">❌ Нема user_id</div>`;
+    return;
+  }
+
   try{
     const res = await fetch(`${API}/channels/${user}`);
     const data = await res.json();
@@ -254,28 +284,6 @@ async function create(){
   }catch(e){
     tg.showAlert('❌ Помилка');
   }
-}
-
-// ---------- DELETE ----------
-async function del(id){
-  await fetch(`${API}/delete`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({id})
-  });
-
-  load();
-}
-
-// ---------- REROLL ----------
-async function reroll(id){
-  await fetch(`${API}/reroll`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({id})
-  });
-
-  tg.showAlert('🔄 Новий переможець');
 }
 
 // ---------- INIT ----------
