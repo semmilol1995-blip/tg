@@ -321,17 +321,12 @@ function initDateFix(){
     if(!input || !placeholder) return;
 
     const toggle = ()=>{
-      if(input.value){
-        placeholder.classList.add('hide');
-      }else{
-        placeholder.classList.remove('hide');
-      }
+      placeholder.classList.toggle('hide', !!input.value);
     };
 
     input.addEventListener('change', toggle);
     input.addEventListener('input', toggle);
 
-    // init
     toggle();
   });
 }
