@@ -1,17 +1,16 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// 🔥 USER (для всіх юзерів)
+// USER
 const user = tg.initDataUnsafe?.user?.id;
 
-// 🔥 AUTO API (production-ready)
+// AUTO API
 const API = (() => {
   const origin = window.location.origin;
 
   if (origin.includes('railway.app')) return origin;
   if (origin.includes('localhost') || origin.includes('127.0.0.1')) return origin;
 
-  // fallback для Telegram WebView
   return 'https://tg-production-4d2b.up.railway.app';
 })();
 
@@ -102,9 +101,9 @@ async function load(){
             👥 Учасники: ${g.participants || 0}
           </div>
 
-          <button onclick="participants(${g.id})">👥 Список учасників</button>
-          <button class="reroll" onclick="reroll(${g.id})">🔄 Рерол</button>
-          <button class="delete" onclick="del(${g.id})">❌ Видалити</button>
+          <button class="btn-participants" data-id="${g.id}">👥 Список учасників</button>
+          <button class="reroll btn-reroll" data-id="${g.id}">🔄 Рерол</button>
+          <button class="delete btn-delete" data-id="${g.id}">❌ Видалити</button>
 
         </div>
       `;
@@ -112,34 +111,44 @@ async function load(){
 
   }catch(e){
     console.log('LOAD ERROR:', e);
-    document.getElementById('list').innerHTML = `<div class="card">❌ Помилка завантаження</div>`;
+    document.getElementById('list').innerHTML = `<div class="card">❌ Помилка</div>`;
   }
 }
 
-// ---------- GLOBAL BUTTONS ----------
-window.participants = function(id){
-  window.open(`${API}/participants/${id}`, '_blank');
-}
+// ---------- EVENTS (КНОПКИ) ----------
+document.addEventListener('click', async (e)=>{
 
-window.del = async function(id){
-  await fetch(`${API}/delete`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({id})
-  });
+  const id = e.target.dataset.id;
+  if(!id) return;
 
-  load();
-}
+  // participants
+  if(e.target.classList.contains('btn-participants')){
+    window.open(`${API}/participants/${id}`, '_blank');
+  }
 
-window.reroll = async function(id){
-  await fetch(`${API}/reroll`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({id})
-  });
+  // delete
+  if(e.target.classList.contains('btn-delete')){
+    await fetch(`${API}/delete`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})
+    });
 
-  tg.showAlert('🔄 Новий переможець');
-}
+    load();
+  }
+
+  // reroll
+  if(e.target.classList.contains('btn-reroll')){
+    await fetch(`${API}/reroll`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})
+    });
+
+    tg.showAlert('🔄 Новий переможець');
+  }
+
+});
 
 // ---------- LOAD CHANNELS ----------
 async function loadChannels(){
@@ -177,8 +186,8 @@ async function loadChannels(){
               >
 
               <div>
-                <div class="channel-title">${ch.title || ch.username || 'Канал'}</div>
-                <div class="channel-username">@${ch.username || ''}</div>
+                <div>${ch.title || ch.username || 'Канал'}</div>
+                <small>@${ch.username || ''}</small>
               </div>
 
             </div>
@@ -192,7 +201,6 @@ async function loadChannels(){
 
   }catch(e){
     console.log('CHANNELS ERROR:', e);
-    document.getElementById('channels').innerHTML = `<div class="card">❌ Помилка</div>`;
   }
 }
 
@@ -220,7 +228,7 @@ async function addChannel(){
     document.getElementById('channelInput').value = '';
     loadChannels();
   }else{
-    tg.showAlert('❌ Помилка додавання');
+    tg.showAlert('❌ Помилка');
   }
 }
 
@@ -291,7 +299,7 @@ async function create(){
       tg.showAlert('❌ Помилка створення');
     }
 
-  }catch(e){
+  }catch{
     tg.showAlert('❌ Помилка');
   }
 }
