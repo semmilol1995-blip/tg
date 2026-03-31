@@ -356,3 +356,30 @@ input:focus,textarea:focus{
 input[type="datetime-local"]{
   color-scheme: dark;
 }
+.channel-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.channel-text{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+.channel-title{
+  font-size:14px;
+  font-weight:600;
+}
+
+.channel-username{
+  font-size:12px;
+  opacity:0.6;
+}
+
+.delete-channel{
+  width:auto;
+  padding:6px 10px;
+  border-radius:10px;
+}
