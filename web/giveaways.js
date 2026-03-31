@@ -22,7 +22,6 @@ async function load(){
 
     let winnersHTML = '';
 
-    // 🏆 якщо завершено — показуємо навіть якщо пусто
     if(g.status === 'finished'){
       let winners = [];
 
@@ -49,31 +48,29 @@ async function load(){
       <div class="card">
 
         ${g.image ? `
-  <div class="thumb-wrap">
-    <img src="${API}/file/${g.image}" class="giveaway-thumb">
-    <div class="giveaway-id">#${g.id}</div>
-  </div>
-` : ''}
+          <div class="thumb-wrap">
+            <img src="${API}/file/${g.image}" class="giveaway-thumb">
+            <div class="giveaway-id">#${g.id}</div>
+          </div>
+        ` : ''}
 
         <div class="card-header">
-  <div class="meta">
-    🏆 ${g.winners}<br>
-    👥 ${g.participants || 0}
-  </div>
+          <div class="meta">
+            🏆 ${g.winners}<br>
+            👥 ${g.participants || 0}
+          </div>
 
-  <span class="status ${g.status}">
-    ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
-  </span>
-</div>
+          <span class="status ${g.status}">
+            ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
+          </span>
+        </div>
 
         <div class="card-body">
           ${g.text || 'Без тексту'}
         </div>
 
         <div class="card-footer">
-          🏆 ${g.winners}
-          <br>
-          👥 Учасники: ${g.participants || 0}
+          <b>#${g.id}</b>
         </div>
 
         ${winnersHTML}
