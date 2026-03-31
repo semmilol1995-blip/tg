@@ -47,13 +47,12 @@ async function load(){
     list.innerHTML += `
       <div class="card">
 
-        ${g.image ? `
-          <div class="thumb-wrap">
-            <!-- 🔥 ПОВЕРНУЛИ ЯК БУЛО -->
-            <img src="${g.image}" class="giveaway-thumb">
-            <div class="giveaway-id">#${g.id}</div>
-          </div>
-        ` : ''}
+${g.image ? `
+  <div class="thumb-wrap">
+    <img src="${API}/file/${g.image}" class="giveaway-thumb">
+    <div class="giveaway-id">#${g.id}</div>
+  </div>
+` : ''}
 
         <div class="card-header">
           <div class="meta">
