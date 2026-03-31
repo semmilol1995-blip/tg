@@ -393,3 +393,26 @@ small{
   background:rgba(239,68,68,0.2) !important;
   color:#ef4444 !important;
 }
+
+/* ===== FIX HEADER LAYOUT ===== */
+
+.card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+/* meta не ламає layout */
+.meta{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start; /* 🔥 ключ */
+  text-align:left;        /* 🔥 ключ */
+  flex-shrink:0;
+}
+
+/* статус завжди справа */
+.status{
+  white-space:nowrap;
+}
