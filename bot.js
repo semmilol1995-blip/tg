@@ -27,20 +27,48 @@ bot.start(async ctx=>{
       const giveaway = g.rows[0];
       const channels = JSON.parse(giveaway.channels || '[]');
 
-      // 🔥 перевірка підписок
+      const notSubscribed = [];
+      const channelButtons = [];
+
+      // 🔥 ПЕРЕВІРКА ПІДПИСОК
       for(let ch of channels){
         try{
           const m = await bot.telegram.getChatMember(ch, ctx.from.id);
 
           if(!['member','administrator','creator'].includes(m.status)){
-            return ctx.reply('❌ Підпишись на всі канали для участі');
+            notSubscribed.push(ch);
           }
-        }catch{
+
+        }catch(e){
+          console.log('SUB CHECK ERROR:', e.message);
           return ctx.reply('❌ Не вдалося перевірити підписку');
         }
       }
 
-      // 🔥 перевірка дубля
+      // ❌ якщо є не підписані
+      if(notSubscribed.length){
+
+        for(let ch of notSubscribed){
+          try{
+            const info = await bot.telegram.getChat(ch);
+
+            if(info.username){
+              channelButtons.push([{
+                text: `📢 ${info.title || 'Канал'}`,
+                url: `https://t.me/${info.username}`
+              }]);
+            }
+
+          }catch{}
+        }
+
+        return ctx.reply(
+          '❌ Щоб взяти участь — підпишись на всі канали 👇',
+          Markup.inlineKeyboard(channelButtons)
+        );
+      }
+
+      // 🔥 ПЕРЕВІРКА ДУБЛЯ
       const exists = await db.query(
         `SELECT * FROM participants WHERE giveaway_id=$1 AND user_id=$2`,
         [id, ctx.from.id]
@@ -50,7 +78,7 @@ bot.start(async ctx=>{
         return ctx.reply('⚠️ Ти вже береш участь');
       }
 
-      // 🔥 запис
+      // 🔥 ЗАПИС
       await db.query(
         `INSERT INTO participants(giveaway_id,user_id,username)
          VALUES($1,$2,$3)`,
@@ -77,9 +105,15 @@ bot.start(async ctx=>{
   }
 });
 
-// ---------- LAUNCH ----------
+// ---------- SAFE LAUNCH ----------
+bot.telegram.deleteWebhook().catch(()=>{});
+
 bot.launch()
   .then(()=>console.log('🤖 BOT READY'))
   .catch(e=>console.log('BOT LAUNCH ERROR:', e.message));
+
+// ---------- GRACEFUL STOP ----------
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 module.exports = bot;
