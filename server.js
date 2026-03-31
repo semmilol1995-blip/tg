@@ -71,7 +71,7 @@ app.get('/channels/:user', async (req,res)=>{
         photo
       });
 
-    }catch(e){
+    }catch{
       result.push(ch);
     }
   }
@@ -133,13 +133,28 @@ app.post('/channels/delete', async (req,res)=>{
   }
 });
 
-// ---------- GIVEAWAYS ----------
+// ---------- GIVEAWAYS + COUNT ----------
 app.get('/giveaways/:user', async (req,res)=>{
   const r = await db.query(
     `SELECT * FROM giveaways WHERE owner_id=$1 ORDER BY id DESC`,
     [req.params.user]
   );
-  res.json(r.rows);
+
+  const result = [];
+
+  for(const g of r.rows){
+    const count = await db.query(
+      `SELECT COUNT(*) FROM participants WHERE giveaway_id=$1`,
+      [g.id]
+    );
+
+    result.push({
+      ...g,
+      participants: Number(count.rows[0].count)
+    });
+  }
+
+  res.json(result);
 });
 
 // ---------- CREATE ----------
@@ -250,6 +265,31 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   res.json({ok:true});
 });
 
+// ---------- PARTICIPANTS TXT ----------
+app.get('/participants/:id', async (req,res)=>{
+  const id = req.params.id;
+
+  const users = await db.query(
+    `SELECT username FROM participants WHERE giveaway_id=$1`,
+    [id]
+  );
+
+  if(!users.rows.length){
+    return res.status(404).send('No participants');
+  }
+
+  let text = '';
+
+  users.rows.forEach((u,i)=>{
+    text += `${i+1}. @${u.username}\n`;
+  });
+
+  res.setHeader('Content-Disposition', `attachment; filename="participants_${id}.txt"`);
+  res.setHeader('Content-Type', 'text/plain');
+
+  res.send(text);
+});
+
 // ---------- DELETE ----------
 app.post('/delete', async (req,res)=>{
   const id = req.body.id;
@@ -340,10 +380,6 @@ app.get('/file/:id', async (req,res)=>{
     const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
 
     const response = await fetch(url);
-
-    if(!response.ok){
-      throw new Error('Fetch failed');
-    }
 
     const buffer = Buffer.from(await response.arrayBuffer());
 
