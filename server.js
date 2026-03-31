@@ -31,7 +31,7 @@ app.use(express.static(path.join(__dirname, 'web')));
     winners INT,
     end_time BIGINT,
     button TEXT,
-    image TEXT, -- 🔥 тут file_id
+    image TEXT,
     status TEXT DEFAULT 'active',
     messages TEXT
   )`);
@@ -106,8 +106,6 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   }
 
   let file_id = null;
-
-  // ---------- ВІДПРАВКА ----------
   const messages = [];
 
   for(let ch of channels){
@@ -129,7 +127,6 @@ app.post('/create', upload.single('image'), async (req,res)=>{
           }
         });
 
-        // 🔥 беремо file_id
         file_id = msg.photo[msg.photo.length - 1].file_id;
 
       }else{
@@ -155,7 +152,6 @@ app.post('/create', upload.single('image'), async (req,res)=>{
     }
   }
 
-  // ---------- SAVE ----------
   const r = await db.query(
     `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button,image)
      VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
@@ -164,7 +160,6 @@ app.post('/create', upload.single('image'), async (req,res)=>{
 
   const id = r.rows[0].id;
 
-  // ---------- UPDATE BUTTONS ----------
   for(let m of messages){
     try{
       await bot.telegram.editMessageReplyMarkup(
@@ -273,13 +268,7 @@ setInterval(async ()=>{
   }
 }, 10000);
 
-// ---------- START ----------
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, ()=>{
-  console.log('🌐 WEB READY ON', PORT);
-});
-// ---------- TELEGRAM FILE PROXY ----------
+// ---------- TELEGRAM FILE PROXY (FIXED) ----------
 app.get('/file/:id', async (req,res)=>{
   try{
     const file = await bot.telegram.getFile(req.params.id);
@@ -287,13 +276,25 @@ app.get('/file/:id', async (req,res)=>{
     const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
 
     const response = await fetch(url);
+
+    if(!response.ok){
+      throw new Error('Fetch failed');
+    }
+
     const buffer = await response.arrayBuffer();
 
-    res.set('Content-Type', 'image/jpeg');
+    res.set('Content-Type', response.headers.get('content-type'));
     res.send(Buffer.from(buffer));
 
   }catch(e){
     console.log('FILE ERROR:', e.message);
     res.status(404).send('not found');
   }
+});
+
+// ---------- START ----------
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, ()=>{
+  console.log('🌐 WEB READY ON', PORT);
 });
