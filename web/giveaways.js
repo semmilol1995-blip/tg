@@ -48,10 +48,18 @@ async function load(){
     list.innerHTML += `
       <div class="card">
 
-        ${g.image ? `<img src="${API}/file/${g.image}" class="giveaway-thumb">` : ''}
+        ${g.image ? `
+  <div class="thumb-wrap">
+    <img src="${API}/file/${g.image}" class="giveaway-thumb">
+    <div class="giveaway-id">#${g.id}</div>
+  </div>
+` : ''}
 
         <div class="card-header">
-          <b>#${g.id}</b>
+  <div class="meta">
+    🏆 ${g.winners}<br>
+    👥 ${g.participants || 0}
+  
           <span class="status ${g.status}">
             ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
           </span>
