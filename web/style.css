@@ -427,4 +427,17 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   color-scheme:dark;
 }
 
+/* ========================= */
+/* 💀 HARD RESET DATE/TIME */
+/* ========================= */
 
+.input-wrap input[type="date"],
+.input-wrap input[type="time"]{
+  color:transparent !important;   /* 🔥 ховає текст */
+  text-shadow:0 0 0 #fff;         /* 🔥 але залишає цифри після вибору */
+}
+
+/* для Safari/iOS */
+.input-wrap input::-webkit-datetime-edit{
+  color:transparent;
+}
