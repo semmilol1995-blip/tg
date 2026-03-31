@@ -58,11 +58,18 @@ app.get('/channels/:user', async (req,res)=>{
     try{
       const info = await bot.telegram.getChat(ch.chat_id);
 
-      result.push({
-        ...ch,
-        title: info.title,
-        photo: info.photo?.big_file_id || info.photo?.small_file_id || null
-      });
+// 🔥 ДОП ФІКС
+let photo = null;
+
+if(info.photo){
+  photo = info.photo.big_file_id || info.photo.small_file_id;
+}
+
+    result.push({
+  ...ch,
+  title: info.title,
+  photo
+});
 
     }catch{
       result.push(ch);
