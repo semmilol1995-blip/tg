@@ -66,7 +66,7 @@ app.get('/giveaways/:user', async (req,res)=>{
   res.json(r.rows);
 });
 
-// ---------- CREATE (PHOTO SUPPORT) ----------
+// ---------- CREATE ----------
 app.post('/create', upload.single('image'), async (req,res)=>{
 
   const {
@@ -77,7 +77,29 @@ app.post('/create', upload.single('image'), async (req,res)=>{
     button
   } = req.body;
 
-  const channels = JSON.parse(req.body.channels || '[]');
+  // 💣 SAFE CHANNELS PARSE
+  let channels = [];
+
+  try{
+    channels = JSON.parse(req.body.channels || '[]');
+  }catch(e){
+    console.log('CHANNELS PARSE ERROR:', req.body.channels);
+    channels = [];
+  }
+
+  if(!Array.isArray(channels)){
+    console.log('CHANNELS NOT ARRAY:', channels);
+    channels = [];
+  }
+
+  // 💣 FIX TYPE
+  channels = channels.map(ch => Number(ch)).filter(Boolean);
+
+  console.log('FINAL CHANNELS:', channels);
+
+  if(!channels.length){
+    return res.json({ok:false, error:'NO_CHANNELS'});
+  }
 
   const r = await db.query(
     `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button)
@@ -89,11 +111,13 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   const messages = [];
 
   for(let ch of channels){
+    if(!ch) continue;
+
     try{
+      console.log('SEND TO:', ch);
 
       let msg;
 
-      // 🔥 якщо є фото
       if(req.file){
         msg = await bot.telegram.sendPhoto(ch, {
           source: req.file.path
@@ -127,7 +151,7 @@ app.post('/create', upload.single('image'), async (req,res)=>{
       });
 
     }catch(e){
-      console.log('SEND ERROR:', e.message);
+      console.log('SEND ERROR:', ch, e.message);
     }
   }
 
@@ -175,10 +199,14 @@ app.post('/reroll', async (req,res)=>{
   const winner = users.rows[Math.floor(Math.random()*users.rows.length)];
 
   const g = await db.query(`SELECT * FROM giveaways WHERE id=$1`,[id]);
-  const channels = JSON.parse(g.rows[0].channels);
+  const channels = JSON.parse(g.rows[0].channels || '[]');
 
   for(let ch of channels){
-    await bot.telegram.sendMessage(ch, `🔄 Новий переможець:\n@${winner.username}`);
+    try{
+      await bot.telegram.sendMessage(ch, `🔄 Новий переможець:\n@${winner.username}`);
+    }catch(e){
+      console.log('REROLL ERROR:', e.message);
+    }
   }
 
   res.json({ok:true});
@@ -212,10 +240,14 @@ setInterval(async ()=>{
         text += `${i+1}. @${w.username}\n`;
       });
 
-      const channels = JSON.parse(g.channels);
+      const channels = JSON.parse(g.channels || '[]');
 
       for(let ch of channels){
-        await bot.telegram.sendMessage(ch, text);
+        try{
+          await bot.telegram.sendMessage(ch, text);
+        }catch(e){
+          console.log('RESULT ERROR:', e.message);
+        }
       }
 
       await db.query(
