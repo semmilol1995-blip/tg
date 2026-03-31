@@ -113,8 +113,8 @@ async function loadChannels(){
 
             <img 
               src="${ch.photo 
-  ? `/file/${ch.photo}`
-  : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(ch.title || 'TG')}"
+                ? `/file/${ch.photo}`
+                : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(ch.title || 'TG')}"
               class="avatar"
             >
 
@@ -167,25 +167,37 @@ async function create(){
   formData.append('winners', winners);
   formData.append('time', new Date(date).getTime());
   formData.append('button', button);
-
   formData.append('channels', JSON.stringify(selectedChannels));
 
+  // 🔥 КРИТИЧНИЙ ФІКС (саме тут була проблема)
   if(imageFile){
-    formData.append('image', imageFile);
+    formData.append('image', imageFile, imageFile.name);
   }
 
   try{
-    await fetch('/create',{
+    const res = await fetch('/create',{
       method:'POST',
       body:formData
     });
 
-    tg.showAlert('✅ Розіграш створено');
+    const data = await res.json();
+
+    if(data.ok){
+      tg.showAlert('✅ Розіграш створено');
+    }else{
+      tg.showAlert('❌ Помилка створення');
+    }
 
     // reset
     imageFile = null;
-    document.getElementById('preview').style.display = 'none';
 
+    const preview = document.getElementById('preview');
+    if(preview){
+      preview.style.display = 'none';
+      preview.src = '';
+    }
+
+    // reload
     load();
 
   }catch(e){
