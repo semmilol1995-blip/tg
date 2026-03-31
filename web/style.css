@@ -419,3 +419,36 @@ input[type="datetime-local"]{
   border-radius:8px;
   font-size:14px;
 }
+/* 🔥 ADD CHANNEL FIX */
+
+.add-channel{
+  display:flex;
+  gap:8px;
+}
+
+.add-channel input{
+  flex:1;
+}
+
+/* кнопка як input */
+.add-btn{
+  width:auto;
+  padding:0 16px;
+  border-radius:14px;
+
+  height:44px; /* 🔥 така ж висота як input */
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:linear-gradient(135deg,#00ffa6,#00c3ff);
+  color:#000;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+/* hover */
+.add-btn:hover{
+  transform:scale(1.03);
+}
