@@ -1,118 +1,180 @@
+*{
+  box-sizing:border-box;
+}
+
 body{
   margin:0;
-  font-family: Inter, sans-serif;
-  background:#0e1117;
+  font-family: Inter, -apple-system, sans-serif;
+  background: radial-gradient(circle at top, #0f172a, #020617);
   color:#fff;
 }
 
 .app{
-  padding:15px;
+  padding:16px;
+  max-width:500px;
+  margin:0 auto;
 }
 
-h2,h3{
-  margin:10px 0;
+/* HEADER */
+.header h2{
+  margin:0 0 12px;
+  font-size:22px;
+  font-weight:800;
 }
 
+/* SECTIONS */
+.section{
+  margin-bottom:20px;
+}
+
+.section h3{
+  margin:12px 0;
+  font-size:15px;
+  opacity:0.8;
+}
+
+/* CARD */
 .card{
-  background:#161b22;
-  border-radius:14px;
+  background:linear-gradient(180deg,#0f172a,#020617);
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:16px;
   padding:14px;
   margin-bottom:12px;
-  box-shadow:0 0 10px rgba(0,0,0,0.3);
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
 
-.card-header{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:8px;
+/* GIVEAWAY TEXT */
+.card b{
+  font-size:16px;
 }
 
+.card br{
+  line-height:1.8;
+}
+
+/* STATUS */
 .status{
   font-size:12px;
-  padding:4px 8px;
-  border-radius:8px;
+  padding:4px 10px;
+  border-radius:999px;
+  display:inline-block;
+  margin-top:6px;
 }
 
 .status.active{
-  background:#1f6feb;
+  background:rgba(34,197,94,0.2);
+  color:#22c55e;
 }
 
 .status.finished{
-  background:#2ea043;
+  background:rgba(239,68,68,0.2);
+  color:#ef4444;
 }
 
-.card-body{
-  font-size:14px;
-  opacity:0.9;
-  margin-bottom:8px;
-}
-
-.card-footer{
-  font-size:13px;
-  opacity:0.7;
-  margin-bottom:10px;
-}
-
-.actions{
-  display:flex;
-  gap:8px;
-}
-
-.btn{
-  flex:1;
-  padding:10px;
+/* BUTTONS */
+button{
+  width:100%;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
+  padding:12px;
   font-weight:600;
   cursor:pointer;
+  transition:0.2s;
 }
 
+/* MAIN BUTTON */
+.main-btn{
+  background:linear-gradient(90deg,#00ffa6,#00c3ff);
+  color:#000;
+  font-weight:700;
+  margin-top:10px;
+}
+
+.main-btn:hover{
+  transform:scale(1.02);
+}
+
+/* ACTIONS */
 .reroll{
-  background:#238636;
+  background:linear-gradient(90deg,#22c55e,#16a34a);
   color:#fff;
+  margin-top:8px;
 }
 
 .delete{
-  background:#da3633;
+  background:linear-gradient(90deg,#ef4444,#dc2626);
   color:#fff;
+  margin-top:6px;
 }
 
-textarea,input{
+/* INPUTS */
+textarea,
+input{
   width:100%;
-  margin:6px 0;
+  margin-top:8px;
   padding:12px;
-  border-radius:10px;
-  border:none;
-  background:#161b22;
-  color:#fff;
-}
-
-button{
-  width:100%;
-  padding:14px;
-  border:none;
   border-radius:12px;
-  background:#00ffa6;
-  font-weight:bold;
-  margin-top:10px;
+  border:1px solid rgba(255,255,255,0.05);
+  background:#020617;
+  color:#fff;
+  outline:none;
+  transition:0.2s;
 }
-.upload{
-  display:block;
-  margin-top:10px;
-  padding:12px;
-  background:#161b22;
-  border-radius:10px;
-  text-align:center;
+
+textarea{
+  min-height:90px;
+}
+
+input:focus,
+textarea:focus{
+  border:1px solid #00ffa6;
+  box-shadow:0 0 0 2px rgba(0,255,166,0.2);
+}
+
+/* CHANNEL CHECKBOX */
+label{
+  display:flex;
+  align-items:center;
+  gap:10px;
   cursor:pointer;
+}
+
+input[type="checkbox"]{
+  width:18px;
+  height:18px;
+}
+
+/* UPLOAD */
+.upload{
+  margin-top:10px;
+  padding:14px;
+  border-radius:12px;
+  text-align:center;
+  background:#020617;
+  border:1px dashed rgba(255,255,255,0.1);
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.upload:hover{
+  border-color:#00ffa6;
 }
 
 .upload input{
   display:none;
 }
 
+/* PREVIEW */
 .preview{
   width:100%;
   margin-top:10px;
   border-radius:12px;
   display:none;
+  box-shadow:0 10px 25px rgba(0,0,0,0.5);
+}
+
+/* SMALL TEXT */
+small{
+  opacity:0.6;
+  font-size:12px;
 }
