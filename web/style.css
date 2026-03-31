@@ -417,24 +417,27 @@ small{
   white-space:nowrap;
 }
 
-/* контейнер */
+/* 🔥 FINAL FIX — В ОДИН РЯД */
+
 .meta{
-  display:flex;
-  align-items:center;
+  display:flex !important;
+  flex-direction:row !important;   /* 💣 головне */
+  align-items:center !important;
   gap:8px;
-  flex-wrap:wrap;
+  flex-wrap:nowrap !important;     /* 💣 щоб не переносило */
 }
 
-/* 🔥 бейдж */
+/* бейджі */
 .meta span{
   background:rgba(255,255,255,0.06);
   padding:5px 10px;
   border-radius:999px;
   font-size:12px;
   font-weight:500;
+  white-space:nowrap;
 }
 
-/* окремо кольори */
+/* кольори */
 .meta .winners{
   background:rgba(251,191,36,0.15);
   color:#fbbf24;
