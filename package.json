@@ -1,7 +1,6 @@
 {
   "name": "giveaway-pro",
-  "version": "5.0.0",
-  "description": "Telegram Giveaway Bot + WebApp",
+  "version": "8.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,6 +9,7 @@
     "telegraf": "^4.16.3",
     "express": "^4.19.2",
     "pg": "^8.11.3",
-    "dotenv": "^16.4.0"
+    "dotenv": "^16.4.0",
+    "multer": "^1.4.5"
   }
 }
