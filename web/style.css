@@ -22,6 +22,7 @@ body{
   margin:0 0 16px;
   font-size:22px;
   font-weight:800;
+  letter-spacing:0.3px;
 }
 
 /* SECTION */
@@ -44,41 +45,39 @@ body{
   border:1px solid rgba(255,255,255,0.06);
   border-radius:18px;
   padding:14px;
-  margin-bottom:14px;
+  margin-bottom:12px;
   box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  transition:0.25s;
   position:relative;
   overflow:hidden;
-  transition:0.25s;
+}
+
+/* 🔥 FIX OVERLAY (ГОЛОВНЕ) */
+.card::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,0.05), transparent);
+  opacity:0;
+  transition:0.3s;
+  pointer-events:none; /* 💣 ФІКС */
+}
+
+.card:hover::after{
+  opacity:1;
 }
 
 .card:hover{
-  transform: translateY(-3px);
-}
-
-/* IMAGE WRAPPER */
-.thumb-wrap{
-  position:relative;
+  transform: translateY(-3px) scale(1.01);
 }
 
 /* IMAGE */
 .giveaway-thumb{
   width:100%;
   border-radius:14px;
+  margin-bottom:10px;
   max-height:200px;
   object-fit:cover;
-}
-
-/* 🔥 GIVEAWAY ID */
-.giveaway-id{
-  position:absolute;
-  top:10px;
-  left:10px;
-  background:rgba(0,0,0,0.65);
-  padding:6px 10px;
-  border-radius:10px;
-  font-size:12px;
-  font-weight:700;
-  backdrop-filter: blur(6px);
 }
 
 /* HEADER */
@@ -86,42 +85,31 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-top:10px;
 }
 
 /* STATUS */
 .status{
   font-size:11px;
-  padding:5px 12px;
+  padding:4px 10px;
   border-radius:999px;
-  font-weight:600;
 }
 
-/* 🔵 ACTIVE */
 .status.active{
-  background:rgba(59,130,246,0.2);
-  color:#3b82f6;
+  background:rgba(34,197,94,0.2);
+  color:#22c55e;
 }
 
-/* 🔴 FINISHED */
 .status.finished{
   background:rgba(239,68,68,0.2);
   color:#ef4444;
 }
 
-/* META INFO (праворуч) */
-.meta{
-  font-size:12px;
-  opacity:0.85;
-  text-align:right;
-  line-height:1.4;
-}
-
 /* BODY */
 .card-body{
-  margin-top:10px;
+  margin-top:8px;
   font-size:14px;
-  line-height:1.45;
+  line-height:1.4;
+  opacity:0.9;
 }
 
 /* FOOTER */
@@ -141,8 +129,7 @@ button{
   cursor:pointer;
   transition:0.2s;
   position:relative;
-  z-index:10;
-  margin-top:8px;
+  z-index:10; /* 🔥 щоб бути поверх */
 }
 
 /* ripple */
@@ -164,6 +151,7 @@ button:active::after{
   background:linear-gradient(135deg,#00ffa6,#00c3ff);
   color:#000;
   font-weight:700;
+  margin-top:12px;
 }
 
 .main-btn:hover{
@@ -172,11 +160,13 @@ button:active::after{
 
 /* ACTIONS */
 .reroll{
+  margin-top:8px;
   background:rgba(34,197,94,0.15);
   color:#22c55e;
 }
 
 .delete{
+  margin-top:6px;
   background:rgba(239,68,68,0.15);
   color:#ef4444;
 }
@@ -327,22 +317,6 @@ input[type="checkbox"]{
   font-weight:600;
 }
 
-/* WINNERS */
-.winner{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:6px;
-  padding:8px;
-  background:rgba(255,255,255,0.05);
-  border-radius:10px;
-}
-
-.winner button{
-  width:auto;
-  padding:6px 10px;
-}
-
 /* SKELETON */
 .skeleton{
   height:80px;
@@ -361,4 +335,61 @@ input[type="checkbox"]{
 small{
   opacity:0.6;
   font-size:12px;
+}
+
+
+.winner{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:6px;
+  padding:8px;
+  background:rgba(255,255,255,0.05);
+  border-radius:10px;
+}
+
+.winner button{
+  width:auto;
+  padding:6px 10px;
+}
+/* ========================= */
+/* 🔥 NEW UI ADDITIONS */
+/* ========================= */
+
+/* обгортка для картинки */
+.thumb-wrap{
+  position:relative;
+}
+
+/* номер розіграшу поверх картинки */
+.giveaway-id{
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:rgba(0,0,0,0.6);
+  padding:6px 10px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+  backdrop-filter:blur(6px);
+}
+
+/* мета (учасники + місця) */
+.meta{
+  font-size:12px;
+  opacity:0.85;
+  text-align:right;
+  line-height:1.4;
+}
+
+/* 🔵 АКТИВНИЙ — голубий */
+.status.active{
+  background:rgba(59,130,246,0.2) !important;
+  color:#3b82f6 !important;
+}
+
+/* 🔴 ЗАВЕРШЕНО — червоний */
+.status.finished{
+  background:rgba(239,68,68,0.2) !important;
+  color:#ef4444 !important;
 }
