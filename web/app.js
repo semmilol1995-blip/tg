@@ -7,22 +7,25 @@ let selectedChannels = [];
 let imageFile = null;
 
 // ---------- IMAGE ----------
-document.getElementById('image').addEventListener('change', e=>{
-  const file = e.target.files[0];
-  if(!file) return;
+const imageInput = document.getElementById('image');
+if(imageInput){
+  imageInput.addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
 
-  imageFile = file;
+    imageFile = file;
 
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    const img = document.getElementById('preview');
-    img.src = reader.result;
-    img.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-});
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = document.getElementById('preview');
+      img.src = reader.result;
+      img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
-// ---------- LOAD ----------
+// ---------- LOAD GIVEAWAYS ----------
 async function load(){
   const res = await fetch(`/giveaways/${user}`);
   const data = await res.json();
@@ -30,22 +33,39 @@ async function load(){
   const list = document.getElementById('list');
   list.innerHTML = '';
 
+  if(!data.length){
+    list.innerHTML = `<div class="card">Нема розіграшів</div>`;
+    return;
+  }
+
   data.forEach(g=>{
     list.innerHTML += `
       <div class="card">
-        <b>#${g.id}</b><br>
-        ${g.text}<br>
-        🏆 ${g.winners}<br>
-        ${g.status}<br>
+
+        <div class="card-header">
+          <b>#${g.id}</b>
+          <span class="status ${g.status}">
+            ${g.status === 'active' ? '🟢 Активний' : '🔴 Завершено'}
+          </span>
+        </div>
+
+        <div class="card-body">
+          ${g.text || 'Без тексту'}
+        </div>
+
+        <div class="card-footer">
+          🏆 ${g.winners}
+        </div>
 
         <button class="reroll" onclick="reroll(${g.id})">🔄 Рерол</button>
         <button class="delete" onclick="del(${g.id})">❌ Видалити</button>
+
       </div>
     `;
   });
 }
 
-// ---------- CHANNELS ----------
+// ---------- LOAD CHANNELS ----------
 async function loadChannels(){
   const res = await fetch(`/channels/${user}`);
   const data = await res.json();
@@ -53,18 +73,24 @@ async function loadChannels(){
   const box = document.getElementById('channels');
   box.innerHTML = '';
 
+  if(!data.length){
+    box.innerHTML = `<div class="card">Нема каналів</div>`;
+    return;
+  }
+
   data.forEach(ch=>{
     box.innerHTML += `
       <div class="card">
         <label>
           <input type="checkbox" value="${ch.chat_id}" onchange="toggleChannel(this)">
-          ${ch.username}
+          ${ch.username || ch.chat_id}
         </label>
       </div>
     `;
   });
 }
 
+// ---------- SELECT CHANNEL ----------
 function toggleChannel(el){
   const id = el.value;
 
@@ -83,28 +109,47 @@ async function create(){
     return tg.showAlert('❌ Обери канал');
   }
 
+  const text = document.getElementById('text').value;
+  const winners = document.getElementById('winners').value;
+  const date = document.getElementById('date').value;
+  const button = document.getElementById('button').value;
+
+  if(!text || !winners || !date || !button){
+    return tg.showAlert('❌ Заповни всі поля');
+  }
+
   const formData = new FormData();
 
   formData.append('user_id', user);
-  formData.append('text', document.getElementById('text').value);
-  formData.append('winners', document.getElementById('winners').value);
-  formData.append('time', new Date(document.getElementById('date').value).getTime());
-  formData.append('button', document.getElementById('button').value);
+  formData.append('text', text);
+  formData.append('winners', winners);
+  formData.append('time', new Date(date).getTime());
+  formData.append('button', button);
 
+  // 💣 ВАЖЛИВО
   formData.append('channels', JSON.stringify(selectedChannels));
 
   if(imageFile){
     formData.append('image', imageFile);
   }
 
-  await fetch('/create',{
-    method:'POST',
-    body:formData
-  });
+  try{
+    await fetch('/create',{
+      method:'POST',
+      body:formData
+    });
 
-  tg.showAlert('✅ Створено');
+    tg.showAlert('✅ Розіграш створено');
 
-  load();
+    // reset
+    imageFile = null;
+    document.getElementById('preview').style.display = 'none';
+
+    load();
+
+  }catch(e){
+    tg.showAlert('❌ Помилка створення');
+  }
 }
 
 // ---------- DELETE ----------
