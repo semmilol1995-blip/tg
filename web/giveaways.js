@@ -58,7 +58,7 @@ ${g.image ? `
 
   <div class="meta">
     <span class="winners">🏆 ${g.winners}</span>
-    <span class="participants">👥 Учасників: ${g.participants || 0}</span>
+    <span class="participants">👤Учасників: ${g.participants || 0}</span>
   </div>
 
   <span class="status ${g.status}">
