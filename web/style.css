@@ -178,3 +178,36 @@ small{
   opacity:0.6;
   font-size:12px;
 }
+/* GIVEAWAY IMAGE */
+.giveaway-thumb{
+  width:100%;
+  border-radius:12px;
+  margin-bottom:10px;
+  object-fit:cover;
+  max-height:200px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.5);
+}
+/* CHANNEL CARD */
+.channel-card{
+  background:linear-gradient(180deg,#0f172a,#020617);
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:14px;
+  padding:10px;
+  margin-bottom:10px;
+}
+
+/* CHANNEL INFO */
+.channel-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* AVATAR */
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  object-fit:cover;
+  background:#111;
+}
