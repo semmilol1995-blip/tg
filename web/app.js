@@ -312,6 +312,32 @@ async function create(){
 load();
 loadChannels();
 
+// ---------- FIX DATE PLACEHOLDER ----------
+function initDateFix(){
+  ['date','time'].forEach(id=>{
+    const input = document.getElementById(id);
+    const placeholder = document.querySelector(`[data-for="${id}"]`);
+
+    if(!input || !placeholder) return;
+
+    const toggle = ()=>{
+      if(input.value){
+        placeholder.classList.add('hide');
+      }else{
+        placeholder.classList.remove('hide');
+      }
+    };
+
+    input.addEventListener('change', toggle);
+    input.addEventListener('input', toggle);
+
+    // init
+    toggle();
+  });
+}
+
+initDateFix();
+
 // ---------- LIVE PREVIEW ----------
 document.getElementById('text')?.addEventListener('input', renderPreview);
 document.getElementById('button')?.addEventListener('input', renderPreview);
