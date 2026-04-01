@@ -313,9 +313,14 @@ function openPicker(){
 
   if(!input) return;
 
-  // 🔥 для iOS / Telegram
-  input.focus();
-  input.click();
+  // 🔥 ПК
+  if(input.showPicker){
+    input.showPicker();
+  }else{
+    // 🔥 мобілка fallback
+    input.focus();
+    input.click();
+  }
 }
 
 const hiddenInput = document.getElementById('hiddenDateTime');
