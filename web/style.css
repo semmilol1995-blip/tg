@@ -481,16 +481,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 #hiddenDateTime{
   position:absolute;
 
-  inset:0; /* 🔥 розтягує на весь блок */
+  top:0;
+  left:0;
 
   width:100%;
-  height:100%;
+  height:44px; /* 🔥 ТІЛЬКИ ВИСОТА ІНПУТА */
 
   opacity:0.01;
 
-  z-index:5; /* 🔥 поверх всього */
-
-  cursor:pointer;
+  z-index:2;
 }
 /* ========================= */
 /* 🔥 TELEGRAM PREVIEW FIX */
