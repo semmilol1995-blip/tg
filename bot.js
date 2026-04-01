@@ -12,8 +12,14 @@ bot.start(async ctx=>{
     const param = text.split(' ')[1];
 
     // ---------- JOIN FLOW ----------
-    if(param && param.startsWith('join_')){
-      const id = param.split('_')[1];
+   if(param && param.startsWith('join_')){
+
+  const id = param.split('_')[1];
+
+  // 🔥 FIX: відсікаємо temp / криві значення
+  if(!id || isNaN(id)){
+    return ctx.reply('⏳ Розіграш ще створюється, спробуй ще раз');
+  }
 
       const g = await db.query(
         `SELECT * FROM giveaways WHERE id=$1`,
