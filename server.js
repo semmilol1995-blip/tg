@@ -94,6 +94,7 @@ app.get('/participants/:id', async (req,res)=>{
 
   res.send(text);
 });
+
 // ---------- CHANNELS ----------
 app.get('/channels/:user', async (req,res)=>{
   try{
@@ -130,7 +131,6 @@ app.get('/channels/:user', async (req,res)=>{
     res.json([]);
   }
 });
-
 // ---------- DELETE ----------
 app.post('/delete', async (req,res)=>{
   const { id } = req.body;
@@ -185,7 +185,7 @@ app.get('/giveaways/:user', async (req,res)=>{
   }
 });
 
-// ---------- CREATE ----------
+// ---------- CREATE (🔥 FIXED БЕЗ join_temp) ----------
 app.post('/create', upload.single('image'), async (req,res)=>{
 
   const { user_id, text, winners, time, button } = req.body;
@@ -209,6 +209,16 @@ app.post('/create', upload.single('image'), async (req,res)=>{
     }
   }
 
+  // 🔥 СПОЧАТКУ INSERT
+  const r = await db.query(
+    `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button,image)
+     VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+    [user_id, JSON.stringify(channels), text, winners, Number(time), button, file_id ]
+  );
+
+  const id = r.rows[0].id;
+
+  // 🔥 ПОТІМ ВІДПРАВКА
   const messages = [];
 
   for(let ch of channels){
@@ -222,7 +232,7 @@ app.post('/create', upload.single('image'), async (req,res)=>{
             inline_keyboard:[[
               {
                 text: button,
-                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_temp`
+                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_${id}`
               }
             ]]
           }
@@ -233,7 +243,7 @@ app.post('/create', upload.single('image'), async (req,res)=>{
             inline_keyboard:[[
               {
                 text: button,
-                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_temp`
+                url:`https://t.me/${process.env.BOT_USERNAME}?start=join_${id}`
               }
             ]]
           }
@@ -248,14 +258,6 @@ app.post('/create', upload.single('image'), async (req,res)=>{
     }catch{}
   }
 
-  const r = await db.query(
-    `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button,image)
-     VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
-    [user_id, JSON.stringify(channels), text, winners, Number(time), button, file_id ]
-  );
-
-  const id = r.rows[0].id;
-
   await db.query(
     `UPDATE giveaways SET messages=$1 WHERE id=$2`,
     [JSON.stringify(messages), id]
@@ -263,8 +265,7 @@ app.post('/create', upload.single('image'), async (req,res)=>{
 
   res.json({ok:true});
 });
-
-// ---------- REROLL (🔥 ТЕПЕР ПРАВИЛЬНИЙ) ----------
+// ---------- REROLL ----------
 app.post('/reroll', async (req,res)=>{
   const { id, place } = req.body;
 
@@ -330,7 +331,7 @@ app.post('/reroll', async (req,res)=>{
   res.json({ok:true});
 });
 
-// ---------- AUTO RESULTS (🔥 ЗБЕРІГАЄ MESSAGE ID) ----------
+// ---------- AUTO RESULTS ----------
 setInterval(async ()=>{
   const r = await db.query(`SELECT * FROM giveaways WHERE status='active'`);
   const now = Date.now();
