@@ -344,7 +344,11 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   width:100%;
   margin-top:10px;
   border-radius:14px;
+
   display:none;
+
+  max-height:220px;        /* 🔥 обмеження */
+  object-fit:cover;        /* 🔥 не тягне */
 }
 
 /* WINNERS */
