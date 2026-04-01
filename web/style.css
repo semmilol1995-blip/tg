@@ -492,3 +492,21 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 
   cursor:pointer;
 }
+/* ========================= */
+/* 🔥 TELEGRAM PREVIEW FIX */
+/* ========================= */
+
+.tg-post{
+  margin-top:10px;
+  border-radius:14px;
+  overflow:hidden; /* 🔥 щоб не вилізала */
+  background:rgba(15,23,42,0.6);
+}
+
+/* 🔥 ГОЛОВНЕ */
+.tg-post img{
+  width:100%;
+  max-height:220px;   /* 🔥 обмеження */
+  object-fit:cover;   /* 🔥 не розтягується */
+  display:block;
+}
