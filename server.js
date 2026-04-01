@@ -253,7 +253,7 @@ app.post('/create', upload.single('image'), async (req,res)=>{
   const r = await db.query(
     `INSERT INTO giveaways(owner_id,channels,text,winners,end_time,button,image)
      VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
-    [user_id, JSON.stringify(channels), text, winners, time, button, file_id]
+    [user_id, JSON.stringify(channels), text, winners, Number(time), button, file_id ]
   );
 
   const id = r.rows[0].id;
@@ -356,7 +356,13 @@ setInterval(async ()=>{
         [g.id]
       );
 
-      if(!users.rows.length) continue;
+      if(!users.rows.length){
+  await db.query(
+    `UPDATE giveaways SET status='finished' WHERE id=$1`,
+    [g.id]
+  );
+  continue;
+}
 
       const winners = [];
 
@@ -378,18 +384,21 @@ setInterval(async ()=>{
         text += `${w.place}. @${w.username}\n`;
       });
 
-      const messages = JSON.parse(g.messages || '[]');
+     const channels = JSON.parse(g.channels || '[]');
 
-      for(let m of messages){
-        try{
-          await bot.telegram.editMessageText(
-            m.chat_id,
-            m.message_id,
-            null,
-            text
-          );
-        }catch{}
-      }
+for(let ch of channels){
+  try{
+    if(g.image){
+      await bot.telegram.sendPhoto(ch, g.image, {
+        caption: text
+      });
+    }else{
+      await bot.telegram.sendMessage(ch, text);
+    }
+  }catch(e){
+    console.log('SEND RESULT ERROR:', e.message);
+  }
+}
 
       await db.query(
         `UPDATE giveaways SET status='finished', winners_data=$1 WHERE id=$2 AND status='processing'`,
