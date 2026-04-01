@@ -309,7 +309,13 @@ async function create(){
 
 // ---------- CUSTOM DATETIME ----------
 function openPicker(){
-  document.getElementById('hiddenDateTime').showPicker();
+  const input = document.getElementById('hiddenDateTime');
+
+  if(!input) return;
+
+  // 🔥 для iOS / Telegram
+  input.focus();
+  input.click();
 }
 
 const hiddenInput = document.getElementById('hiddenDateTime');
